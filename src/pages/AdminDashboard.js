@@ -9,7 +9,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -21,6 +22,7 @@ import AboutManagement from '../components/admin/AboutManagement';
 import ProjectsManagement from '../components/admin/ProjectsManagement';
 import CertificatesManagement from '../components/admin/CertificatesManagement';
 import SkillsManagement from '../components/admin/SkillsManagement';
+import UnifiedSkillsManagement from '../components/admin/UnifiedSkillsManagement';
 import SiteConfiguration from '../components/admin/SiteConfiguration';
 
 const AdminDashboard = () => {
@@ -35,6 +37,7 @@ const AdminDashboard = () => {
     { name: 'Projects', href: '/admin/projects', icon: FolderOpen },
     { name: 'Certificates', href: '/admin/certificates', icon: Award },
     { name: 'Skills', href: '/admin/skills', icon: Wrench },
+    { name: 'Unified Skills', href: '/admin/unified-skills', icon: Layers },
     { name: 'Site Config', href: '/admin/configuration', icon: Settings },
   ];
 
@@ -170,6 +173,7 @@ const AdminDashboard = () => {
               <Route path="/projects" element={<ProjectsManagement />} />
               <Route path="/certificates" element={<CertificatesManagement />} />
               <Route path="/skills" element={<SkillsManagement />} />
+              <Route path="/unified-skills" element={<UnifiedSkillsManagement />} />
               <Route path="/configuration" element={<SiteConfiguration />} />
             </Routes>
           </div>

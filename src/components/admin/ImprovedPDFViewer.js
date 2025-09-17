@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Download, ZoomIn, ZoomOut, RotateCw, Maximize2, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose }) => {
+const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) => {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -289,13 +289,15 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose }) => {
               <Maximize2 className="w-4 h-4" />
             </button>
             
-            <button
-              onClick={handleDownload}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download</span>
-            </button>
+            {!hideDownload && (
+              <button
+                onClick={handleDownload}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </button>
+            )}
             
             <button
               onClick={onClose}
@@ -339,13 +341,15 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose }) => {
                     <RefreshCw className="w-4 h-4" />
                     <span>Retry ({retryCount}/3)</span>
                   </button>
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download Instead</span>
-                  </button>
+                  {!hideDownload && (
+                    <button
+                      onClick={handleDownload}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Instead</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

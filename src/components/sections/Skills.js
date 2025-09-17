@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useData } from '../../contexts/DataContext';
 import TechnologyIcon from '../TechnologyIcon';
 
 const Skills = () => {
   const { skills, loading } = useData();
+  const [skillVisibilityOverrides, setSkillVisibilityOverrides] = useState({});
+  const [categoryVisibilityOverrides, setCategoryVisibilityOverrides] = useState({});
+
+  // Load visibility overrides from localStorage
+  useEffect(() => {
+    const savedSkillOverrides = localStorage.getItem('skillVisibilityOverrides');
+    const savedCategoryOverrides = localStorage.getItem('categoryVisibilityOverrides');
+    
+    if (savedSkillOverrides) {
+      setSkillVisibilityOverrides(JSON.parse(savedSkillOverrides));
+    }
+    if (savedCategoryOverrides) {
+      setCategoryVisibilityOverrides(JSON.parse(savedCategoryOverrides));
+    }
+  }, []);
+
+  // Get effective visibility for a skill
+  const getEffectiveVisibility = (skill) => {
+    // Check category override first
+    if (categoryVisibilityOverrides[skill.category] === false) {
+      return false;
+    }
+    // Check individual skill override
+    if (skillVisibilityOverrides.hasOwnProperty(skill._id)) {
+      return skillVisibilityOverrides[skill._id];
+    }
+    // Return original visibility
+    return skill.visible;
+  };
 
   const skillCategories = {
     languages: { name: 'Programming Languages', color: 'from-blue-500 to-blue-600', icon: '💻' },
@@ -30,6 +59,11 @@ const Skills = () => {
   }
 
   const skillsByCategory = skills.reduce((acc, skill) => {
+    // Only include skills that are effectively visible
+    if (!getEffectiveVisibility(skill)) {
+      return acc;
+    }
+    
     if (!acc[skill.category]) {
       acc[skill.category] = [];
     }

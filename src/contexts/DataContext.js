@@ -61,10 +61,27 @@ export const DataProvider = ({ children }) => {
     } catch (error) {
       // Revert on error
       setAbout(previousAbout);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Update failed' 
-      };
+      
+      // Handle different types of errors
+      if (error.response?.status === 401) {
+        // Auth error - let the interceptor handle it
+        return { 
+          success: false, 
+          message: 'Authentication expired. Please login again.' 
+        };
+      } else if (error.code === 'ECONNABORTED') {
+        // Timeout error
+        return { 
+          success: false, 
+          message: 'Request timed out. Please try again.' 
+        };
+      } else {
+        // Other errors
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 'Update failed' 
+        };
+      }
     }
   };
 

@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Save, User, Plus, Trash2, Camera, X, Edit3, FileText, Download, Upload } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import PhotoEditor from './PhotoEditor';
 import ResumeManagement from './ResumeManagement';
+import axios from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
 const AboutManagement = () => {
   const { about, updateAbout, loading } = useData();
+  const { resetInactivityForUpload } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -155,26 +158,38 @@ const AboutManagement = () => {
       const formData = new FormData();
       formData.append('resume', file);
 
-      const response = await fetch('/api/about/upload-resume', {
-        method: 'POST',
+      // Reset inactivity timer before upload
+      resetInactivityForUpload();
+
+      const response = await axios.post('/api/about/upload-resume', formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData
+        timeout: 300000, // 5 minutes timeout
+        onUploadProgress: (progressEvent) => {
+          // Reset inactivity timer during upload progress
+          resetInactivityForUpload();
+          
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Resume Upload Progress: ${percentCompleted}%`);
+          }
+        },
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Resume uploaded successfully!');
-        // Refresh the about data
-        window.location.reload();
-      } else {
-        toast.error(data.message || 'Failed to upload resume');
-      }
+      toast.success('Resume uploaded successfully!');
+      // Refresh the about data
+      window.location.reload();
     } catch (error) {
       console.error('Resume upload error:', error);
-      toast.error('Failed to upload resume');
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication expired. Please refresh the page and try again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to upload resume');
+      }
     } finally {
       setUploadingResume(false);
     }
@@ -215,25 +230,37 @@ const AboutManagement = () => {
       const formData = new FormData();
       formData.append('photo', croppedFile);
 
-      const response = await fetch('/api/about/upload-photo', {
-        method: 'POST',
+      // Reset inactivity timer before upload
+      resetInactivityForUpload();
+
+      const response = await axios.post('/api/about/upload-photo', formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData
+        timeout: 300000, // 5 minutes timeout
+        onUploadProgress: (progressEvent) => {
+          // Reset inactivity timer during upload progress
+          resetInactivityForUpload();
+          
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Upload Progress: ${percentCompleted}%`);
+          }
+        },
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Profile photo updated successfully!');
-        window.location.reload();
-      } else {
-        toast.error(data.message || 'Failed to update photo');
-      }
+      toast.success('Profile photo updated successfully!');
+      window.location.reload();
     } catch (error) {
       console.error('Photo update error:', error);
-      toast.error('Failed to update photo');
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication expired. Please refresh the page and try again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to update photo');
+      }
     } finally {
       setUploadingPhoto(false);
     }

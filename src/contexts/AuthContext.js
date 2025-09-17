@@ -66,6 +66,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user, resetInactivityTimer]);
 
+  // Reset inactivity timer during uploads (exported for use in upload components)
+  const resetInactivityForUpload = useCallback(() => {
+    if (user) {
+      resetInactivityTimer();
+      console.log('🔄 Upload activity detected - inactivity timer reset');
+    }
+  }, [user, resetInactivityTimer]);
+
   // Fetch user function
   const fetchUser = async () => {
     try {
@@ -77,7 +85,13 @@ export const AuthProvider = ({ children }) => {
       resetInactivityTimer();
     } catch (error) {
       console.log('❌ Error fetching user:', error.response?.status, error.message);
-      clearTokensAndLogout();
+      // Only clear tokens if it's an auth error, not a network error
+      if (error.response?.status === 401) {
+        clearTokensAndLogout();
+      } else {
+        // For network errors, just set loading to false
+        setLoading(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +194,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     showInactivityWarning,
-    dismissWarning
+    dismissWarning,
+    resetInactivityForUpload
   };
 
   return (

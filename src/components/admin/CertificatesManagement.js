@@ -3,14 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Plus, Edit, Trash2, Award, Calendar, Eye, EyeOff, Upload, Download, FileText, Image, X, Star, ChevronDown, ChevronUp, ExternalLink, FileImage, File, Link } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { uploadFile, uploadMultipleFiles } from '../../utils/fileUpload';
+import axios from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
 const CertificatesManagement = () => {
   const { certificates, projects, createCertificate, updateCertificate, deleteCertificate, loading } = useData();
+  const { resetInactivityForUpload } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isExtracting, setIsExtracting] = useState(false);
   const [expandedCertificates, setExpandedCertificates] = useState(new Set());
   const [previewFile, setPreviewFile] = useState(null);
@@ -84,39 +89,49 @@ const CertificatesManagement = () => {
             console.log(`  ${key}:`, value);
           }
 
-          const token = localStorage.getItem('token');
-          const response = await fetch('/api/certificates/with-files', {
-            method: 'POST',
+          // Reset inactivity timer before upload
+          resetInactivityForUpload();
+
+          const response = await axios.post('/api/certificates/with-files', formData, {
             headers: {
-              'Authorization': `Bearer ${token}`
+              'Content-Type': 'multipart/form-data',
             },
-            body: formData
+            timeout: 600000, // 10 minutes timeout for large files
+            onUploadProgress: (progressEvent) => {
+              // Reset inactivity timer during upload progress
+              resetInactivityForUpload();
+              
+              if (progressEvent.total) {
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
+                setUploadProgress(percentCompleted);
+                console.log(`Certificate Upload Progress: ${percentCompleted}%`);
+              }
+            },
           });
 
-          if (response.ok) {
-            const result = await response.json();
-            toast.success('Certificate added with files successfully!');
-            
-            // If extracted data is available, show it to the user
-            if (result.extractedData) {
-              toast.success('Details were extracted from the uploaded file and auto-filled!');
-            }
-            
-            reset();
-            setIsCreating(false);
-            setEditingCertificate(null);
-            setUploadedFiles([]);
-            // Refresh the page to show the new certificate
-            window.location.reload();
-          } else {
-            const error = await response.json();
-            console.error('🔗 DEBUG: Certificate creation error:', error);
-            console.error('🔗 DEBUG: Response status:', response.status);
-            toast.error(error.message || error.errors?.[0]?.msg || 'Failed to add certificate with files');
+          toast.success('Certificate added with files successfully!');
+          
+          // If extracted data is available, show it to the user
+          if (response.data.extractedData) {
+            toast.success('Details were extracted from the uploaded file and auto-filled!');
           }
+          
+          reset();
+          setIsCreating(false);
+          setEditingCertificate(null);
+          setUploadedFiles([]);
+          // Refresh the page to show the new certificate
+          window.location.reload();
         } catch (error) {
           console.error('Add certificate with files error:', error);
-          toast.error('Failed to add certificate with files');
+          
+          if (error.response?.status === 401) {
+            toast.error('Authentication expired. Please refresh the page and try again.');
+          } else {
+            toast.error(error.response?.data?.message || 'Failed to add certificate with files');
+          }
         } finally {
           setIsUploading(false);
         }
@@ -158,24 +173,21 @@ const CertificatesManagement = () => {
     }
 
     // If editing existing certificate, upload immediately
-    const formData = new FormData();
-    Array.from(files).forEach(file => {
-      formData.append('files', file);
-    });
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/certificates/${editingCertificate._id}/upload-files`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const result = await uploadMultipleFiles(
+        Array.from(files),
+        `/api/certificates/${editingCertificate._id}/upload-files`,
+        (progress) => {
+          setUploadProgress(progress);
         },
-        body: formData
-      });
+        (error) => {
+          console.error('Upload error:', error);
+          toast.error('Upload failed. Please try again.');
+        }
+      );
 
-      if (response.ok) {
-        const result = await response.json();
-        toast.success(result.message);
+      if (result.success) {
+        toast.success(result.data.message);
         
         // Auto-extract details from the first uploaded file if it's an image or PDF
         const firstFile = Array.from(files)[0];
@@ -186,14 +198,28 @@ const CertificatesManagement = () => {
         // Refresh the certificate data
         window.location.reload(); // Simple refresh for now
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to upload files');
+        // Handle different error types with specific messages
+        if (result.error === 'AUTH_EXPIRED') {
+          toast.error('Session expired. Please refresh the page and login again.');
+          // Don't auto-redirect, let user handle it
+        } else if (result.error === 'TIMEOUT') {
+          toast.error('Upload timed out. Please try with smaller files or check your connection.');
+        } else if (result.error === 'FILES_TOO_LARGE') {
+          toast.error('Files are too large. Please choose smaller files.');
+        } else if (result.error === 'RATE_LIMITED') {
+          toast.error('Too many requests. Please wait a moment and try again.');
+        } else if (result.error === 'NETWORK_ERROR') {
+          toast.error('Network error. Please check your connection and try again.');
+        } else {
+          toast.error(result.message || 'Failed to upload files. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload files');
+      toast.error('Upload failed. Please check your connection and try again.');
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -812,6 +838,23 @@ const CertificatesManagement = () => {
                      'Upload & Extract Details'}
                   </span>
                 </button>
+                
+                {/* Upload Progress Bar */}
+                {isUploading && uploadProgress > 0 && (
+                  <div className="w-full">
+                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                      <span>Uploading files...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-primary-600 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                
                 <span className="text-sm text-gray-500">
                   PDF, Images, Word, Text files (max 20MB each) • Details extracted automatically
                 </span>

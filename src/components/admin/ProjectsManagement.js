@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Plus, Edit, Trash2, ExternalLink, Github, Eye, EyeOff, X, Upload, FileText, Link, Download, File } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import TechnologyIcon from '../TechnologyIcon';
+import axios from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
 const ProjectsManagement = () => {
   const { projects, certificates, createProject, updateProject, deleteProject, loading } = useData();
+  const { resetInactivityForUpload } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState(false);
@@ -141,25 +144,37 @@ const ProjectsManagement = () => {
         formData.append('files', file);
       });
 
-      const response = await fetch(`/api/projects/${projectId}/files`, {
-        method: 'POST',
+      // Reset inactivity timer before upload
+      resetInactivityForUpload();
+
+      const response = await axios.post(`/api/projects/${projectId}/files`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData
+        timeout: 600000, // 10 minutes timeout
+        onUploadProgress: (progressEvent) => {
+          // Reset inactivity timer during upload progress
+          resetInactivityForUpload();
+          
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Project Files Upload Progress: ${percentCompleted}%`);
+          }
+        },
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Files uploaded successfully!');
-        window.location.reload(); // Refresh to show new files
-      } else {
-        toast.error(data.message || 'Failed to upload files');
-      }
+      toast.success('Files uploaded successfully!');
+      window.location.reload(); // Refresh to show new files
     } catch (error) {
       console.error('File upload error:', error);
-      toast.error('Failed to upload files');
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication expired. Please refresh the page and try again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to upload files');
+      }
     } finally {
       setUploadingFiles(false);
     }
@@ -223,25 +238,37 @@ const ProjectsManagement = () => {
       formData.append('title', title);
       formData.append('description', description);
 
-      const response = await fetch(`/api/projects/${projectId}/reports/upload`, {
-        method: 'POST',
+      // Reset inactivity timer before upload
+      resetInactivityForUpload();
+
+      const response = await axios.post(`/api/projects/${projectId}/reports/upload`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData
+        timeout: 600000, // 10 minutes timeout
+        onUploadProgress: (progressEvent) => {
+          // Reset inactivity timer during upload progress
+          resetInactivityForUpload();
+          
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Report Upload Progress: ${percentCompleted}%`);
+          }
+        },
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Report files uploaded successfully!');
-        window.location.reload();
-      } else {
-        toast.error(data.message || 'Failed to upload report files');
-      }
+      toast.success('Report files uploaded successfully!');
+      window.location.reload();
     } catch (error) {
       console.error('Report upload error:', error);
-      toast.error('Failed to upload report files');
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication expired. Please refresh the page and try again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to upload report files');
+      }
     } finally {
       setUploadingReports(false);
     }
