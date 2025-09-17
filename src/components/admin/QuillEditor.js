@@ -1,16 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { 
   X, 
   Save, 
-  Download, 
   FileDown, 
   Undo,
-  Redo,
-  Type,
-  Palette
+  Redo
 } from 'lucide-react';
 import mammoth from 'mammoth';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
@@ -20,7 +17,6 @@ import toast from 'react-hot-toast';
 
 const QuillEditor = ({ resume, onClose, onSave }) => {
   const [content, setContent] = useState('');
-  const [originalContent, setOriginalContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [history, setHistory] = useState([]);
@@ -29,9 +25,9 @@ const QuillEditor = ({ resume, onClose, onSave }) => {
 
   useEffect(() => {
     loadDocument();
-  }, [resume]);
+  }, [resume, loadDocument]);
 
-  const loadDocument = async () => {
+  const loadDocument = useCallback(async () => {
     if (!resume.url) return;
 
     setIsLoading(true);
@@ -42,14 +38,12 @@ const QuillEditor = ({ resume, onClose, onSave }) => {
       if (resume.mimeType.includes('word') || resume.mimeType.includes('document')) {
         const result = await mammoth.convertToHtml({ arrayBuffer });
         setContent(result.value);
-        setOriginalContent(result.value);
         setHistory([result.value]);
         setHistoryIndex(0);
       } else {
         // For other file types, show a simple text editor
         const text = await response.text();
         setContent(`<div>${text}</div>`);
-        setOriginalContent(`<div>${text}</div>`);
         setHistory([`<div>${text}</div>`]);
         setHistoryIndex(0);
       }
@@ -60,7 +54,7 @@ const QuillEditor = ({ resume, onClose, onSave }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [resume.url, resume.mimeType]);
 
   const saveToHistory = (newContent) => {
     const newHistory = history.slice(0, historyIndex + 1);

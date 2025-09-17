@@ -1,15 +1,13 @@
 import React from 'react';
 import { 
-  FaJs, FaReact, FaNodeJs, FaPython, FaJava, FaHtml5, FaCss3Alt, FaGit, FaGithub, FaDocker, FaAws,
-  FaDatabase, FaServer, FaCode, FaTerminal, FaCloud, FaMobile, FaDesktop, FaLaptop, FaTablet,
+  FaJs, FaReact, FaNodeJs, FaPython, FaJava, FaHtml5, FaCss3Alt, FaGithub, FaDocker, FaAws,
+  FaDatabase, FaCloud, FaMobile,
   FaWindows, FaApple, FaLinux, FaUbuntu, FaCentos, FaRedhat, FaFedora,
-  FaVuejs, FaAngular, FaBootstrap, FaSass, FaNpm, FaYarn,
+  FaVuejs, FaAngular, FaNpm, FaYarn,
   FaGitlab, FaBitbucket, FaTrello, FaSlack, FaDiscord, FaSkype, FaWhatsapp, FaTelegram,
-  FaLinkedin, FaTwitter, FaInstagram, FaFacebook, FaYoutube, FaTwitch, FaReddit, FaStackOverflow,
-  FaPhp, FaLaravel, FaWordpress, FaDrupal, FaJoomla, FaMagento, FaShopify, FaSquarespace,
-  FaFigma, FaSketch, FaInvision,
-  FaCloudflare,
-  FaMicrosoft, FaGoogle, FaAmazon,
+  FaPhp, FaWordpress, FaDrupal, FaJoomla, FaMagento, FaShopify,
+  FaFigma, FaSketch,
+  FaMicrosoft,
   FaMarkdown, FaFile
 } from 'react-icons/fa';
 

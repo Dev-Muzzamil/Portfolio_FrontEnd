@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, ZoomIn, ZoomOut, RotateCw, Maximize2, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
 
   useEffect(() => {
     loadPDF();
-  }, [pdfUrl]);
+  }, [pdfUrl, loadPDF]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -37,9 +37,9 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [onClose, toggleFullscreen, handleZoomIn, handleZoomOut, handleRotate]);
 
-  const loadPDF = async () => {
+  const loadPDF = useCallback(async () => {
     setIsLoading(true);
     setHasError(false);
     
@@ -88,7 +88,7 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
       setIsLoading(false);
       toast.error(`Failed to load PDF: ${error.message}`);
     }
-  };
+  }, [pdfUrl]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
@@ -156,21 +156,21 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
     }
   };
 
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.25, 3));
-  };
+  }, []);
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setScale(prev => Math.max(prev - 0.25, 0.5));
-  };
+  }, []);
 
-  const handleRotate = () => {
+  const handleRotate = useCallback(() => {
     setRotation(prev => (prev + 90) % 360);
-  };
+  }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen);
-  };
+  }, [isFullscreen]);
 
   const getPDFUrl = () => {
     console.log('Original PDF URL:', pdfUrl);

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Save, User, Plus, Trash2, Camera, X, Edit3, FileText, Download, Upload } from 'lucide-react';
+import { Save, User, Plus, Trash2, Camera, X, Edit3 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import PhotoEditor from './PhotoEditor';
@@ -14,12 +14,10 @@ const AboutManagement = () => {
   const { resetInactivityForUpload } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingResume, setUploadingResume] = useState(false);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoEditorImageUrl, setPhotoEditorImageUrl] = useState(null);
   const fileInputRef = useRef(null);
-  const resumeInputRef = useRef(null);
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
     defaultValues: about || {}
   });
@@ -133,94 +131,7 @@ const AboutManagement = () => {
     }
   };
 
-  const handleResumeUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text', 'text/plain'];
-    const isImage = file.type.startsWith('image/');
-    
-    if (!allowedTypes.includes(file.type) && !isImage) {
-      toast.error('Please select a PDF, Word document, or image file');
-      return;
-    }
-
-    // Validate file size (10MB limit for resume)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
-      return;
-    }
-
-    setUploadingResume(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('resume', file);
-
-      // Reset inactivity timer before upload
-      resetInactivityForUpload();
-
-      const response = await axios.post('/api/about/upload-resume', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 300000, // 5 minutes timeout
-        onUploadProgress: (progressEvent) => {
-          // Reset inactivity timer during upload progress
-          resetInactivityForUpload();
-          
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Resume Upload Progress: ${percentCompleted}%`);
-          }
-        },
-      });
-
-      toast.success('Resume uploaded successfully!');
-      // Refresh the about data
-      window.location.reload();
-    } catch (error) {
-      console.error('Resume upload error:', error);
-      
-      if (error.response?.status === 401) {
-        toast.error('Authentication expired. Please refresh the page and try again.');
-      } else {
-        toast.error(error.response?.data?.message || 'Failed to upload resume');
-      }
-    } finally {
-      setUploadingResume(false);
-    }
-  };
-
-  const handleDeleteResume = async () => {
-    if (!window.confirm('Are you sure you want to delete your resume?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/about/resume', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        toast.success('Resume deleted successfully!');
-        // Refresh the about data
-        window.location.reload();
-      } else {
-        const data = await response.json();
-        toast.error(data.message || 'Failed to delete resume');
-      }
-    } catch (error) {
-      console.error('Resume delete error:', error);
-      toast.error('Failed to delete resume');
-    }
-  };
 
   const handlePhotoEditorSave = async (croppedFile) => {
     setUploadingPhoto(true);
@@ -233,7 +144,7 @@ const AboutManagement = () => {
       // Reset inactivity timer before upload
       resetInactivityForUpload();
 
-      const response = await axios.post('/api/about/upload-photo', formData, {
+      await axios.post('/api/about/upload-photo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

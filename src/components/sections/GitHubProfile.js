@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Star, GitFork, Calendar, MapPin, Link as LinkIcon, Flame, Trophy, Target, Zap } from 'lucide-react';
+import { Github, ExternalLink, Star, GitFork, Calendar, MapPin, Link as LinkIcon } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 
 const GitHubProfile = () => {

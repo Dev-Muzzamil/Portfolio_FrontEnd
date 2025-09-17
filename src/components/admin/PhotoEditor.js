@@ -7,8 +7,6 @@ import 'react-image-crop/dist/ReactCrop.css';
 const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState(null);
-  const [rotation, setRotation] = useState(0);
-  const [zoom, setZoom] = useState(1);
   const [croppedImageUrl, setCroppedImageUrl] = useState(null);
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
@@ -54,7 +52,6 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    const pixelRatio = window.devicePixelRatio || 1;
 
     // Calculate actual pixel dimensions
     const cropWidth = crop.width * scaleX;

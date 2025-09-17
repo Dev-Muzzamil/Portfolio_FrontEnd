@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ExternalLink, Calendar, Eye, FileText, Image, Code, ChevronDown, ChevronUp, Play, Download } from 'lucide-react';
+import { Award, ExternalLink, Calendar, Eye, FileText, Image, Code, ChevronDown, Play } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import ImprovedPDFViewer from '../admin/ImprovedPDFViewer';
 
@@ -46,23 +46,6 @@ const Certificates = () => {
     setPdfFile(null);
   };
 
-  const handleDownloadPDF = async (file) => {
-    try {
-      const response = await fetch(file.url);
-      const blob = await response.blob();
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = file.originalName || 'certificate.pdf';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    } catch (error) {
-      console.error('Download error:', error);
-    }
-  };
 
   // Get thumbnail URL for files
   const getThumbnailUrl = (file) => {

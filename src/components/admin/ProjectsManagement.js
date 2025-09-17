@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Plus, Edit, Trash2, ExternalLink, Github, Eye, EyeOff, X, Upload, FileText, Link, Download, File } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Github, Eye, EyeOff, X } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import TechnologyIcon from '../TechnologyIcon';
@@ -13,12 +13,6 @@ const ProjectsManagement = () => {
   const { resetInactivityForUpload } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
-  const [uploadingFiles, setUploadingFiles] = useState(false);
-  const [uploadingReports, setUploadingReports] = useState(false);
-  const [showReportsModal, setShowReportsModal] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const fileInputRef = useRef(null);
-  const reportFileInputRef = useRef(null);
   const { register, handleSubmit, formState: { errors }, reset, control } = useForm();
   
   const { fields: liveUrlFields, append: appendLiveUrl, remove: removeLiveUrl } = useFieldArray({
@@ -135,171 +129,10 @@ const ProjectsManagement = () => {
     }
   };
 
-  // File upload functions
-  const handleFileUpload = async (projectId, files) => {
-    setUploadingFiles(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
-      });
 
-      // Reset inactivity timer before upload
-      resetInactivityForUpload();
 
-      const response = await axios.post(`/api/projects/${projectId}/files`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 600000, // 10 minutes timeout
-        onUploadProgress: (progressEvent) => {
-          // Reset inactivity timer during upload progress
-          resetInactivityForUpload();
-          
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Project Files Upload Progress: ${percentCompleted}%`);
-          }
-        },
-      });
 
-      toast.success('Files uploaded successfully!');
-      window.location.reload(); // Refresh to show new files
-    } catch (error) {
-      console.error('File upload error:', error);
-      
-      if (error.response?.status === 401) {
-        toast.error('Authentication expired. Please refresh the page and try again.');
-      } else {
-        toast.error(error.response?.data?.message || 'Failed to upload files');
-      }
-    } finally {
-      setUploadingFiles(false);
-    }
-  };
 
-  const handleDeleteFile = async (projectId, fileId) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        toast.success('File deleted successfully!');
-        window.location.reload();
-      } else {
-        const data = await response.json();
-        toast.error(data.message || 'Failed to delete file');
-      }
-    } catch (error) {
-      console.error('File delete error:', error);
-      toast.error('Failed to delete file');
-    }
-  };
-
-  // Report management functions
-  const handleAddReport = async (projectId, reportData) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/reports`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(reportData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Report added successfully!');
-        window.location.reload();
-      } else {
-        toast.error(data.message || 'Failed to add report');
-      }
-    } catch (error) {
-      console.error('Report add error:', error);
-      toast.error('Failed to add report');
-    }
-  };
-
-  const handleUploadReportFiles = async (projectId, files, title, description) => {
-    setUploadingReports(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
-      });
-      formData.append('title', title);
-      formData.append('description', description);
-
-      // Reset inactivity timer before upload
-      resetInactivityForUpload();
-
-      const response = await axios.post(`/api/projects/${projectId}/reports/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 600000, // 10 minutes timeout
-        onUploadProgress: (progressEvent) => {
-          // Reset inactivity timer during upload progress
-          resetInactivityForUpload();
-          
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Report Upload Progress: ${percentCompleted}%`);
-          }
-        },
-      });
-
-      toast.success('Report files uploaded successfully!');
-      window.location.reload();
-    } catch (error) {
-      console.error('Report upload error:', error);
-      
-      if (error.response?.status === 401) {
-        toast.error('Authentication expired. Please refresh the page and try again.');
-      } else {
-        toast.error(error.response?.data?.message || 'Failed to upload report files');
-      }
-    } finally {
-      setUploadingReports(false);
-    }
-  };
-
-  const handleDeleteReport = async (projectId, reportId) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/reports/${reportId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        toast.success('Report deleted successfully!');
-        window.location.reload();
-      } else {
-        const data = await response.json();
-        toast.error(data.message || 'Failed to delete report');
-      }
-    } catch (error) {
-      console.error('Report delete error:', error);
-      toast.error('Failed to delete report');
-    }
-  };
-
-  const openReportsModal = (project) => {
-    setSelectedProject(project);
-    setShowReportsModal(true);
-  };
 
   if (loading) {
     return (

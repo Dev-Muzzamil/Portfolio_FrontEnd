@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
         clearTokensAndLogout();
       }, INACTIVITY_TIMEOUT);
     }
-  }, [user]);
+  }, [user, INACTIVITY_TIMEOUT]);
 
   // Handle user activity
   const handleUserActivity = useCallback(() => {
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, [fetchUser]); // Include fetchUser dependency
 
   // Activity listeners effect
   useEffect(() => {

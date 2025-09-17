@@ -6,7 +6,7 @@ import TechnologyIcon from '../TechnologyIcon';
 import toast from 'react-hot-toast';
 
 const UnifiedSkillsManagement = () => {
-  const { projects, certificates, loading, refreshData } = useData();
+  const { loading } = useData();
   const [unifiedSkills, setUnifiedSkills] = useState([]);
   const [filteredSkills, setFilteredSkills] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);

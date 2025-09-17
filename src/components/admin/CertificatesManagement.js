@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Plus, Edit, Trash2, Award, Calendar, Eye, EyeOff, Upload, Download, FileText, Image, X, Star, ChevronDown, ChevronUp, ExternalLink, FileImage, File, Link } from 'lucide-react';
+import { Plus, Edit, Trash2, Award, Calendar, Eye, EyeOff, Upload, Download, FileText, Image, X, Star, ChevronDown, ExternalLink, FileImage, File, Link } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { uploadFile, uploadMultipleFiles } from '../../utils/fileUpload';
+import { uploadMultipleFiles } from '../../utils/fileUpload';
 import axios from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
