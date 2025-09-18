@@ -170,13 +170,19 @@ const GitHubProfile = () => {
   const calendarWeeks = contributions ? getCalendarData(contributions.contributionsByDate) : [];
 
   return (
-    <section className="section-padding bg-gray-50">
+    <motion.section 
+      className="section-padding bg-gray-50"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: true, margin: "-100px" }}
+    >
       <div className="container-max">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true, margin: "-50px" }}
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -490,7 +496,7 @@ const GitHubProfile = () => {
           </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 

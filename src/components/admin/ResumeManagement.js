@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, 
-  Upload, 
   Download, 
   Trash2, 
   Star, 
@@ -14,6 +13,9 @@ import {
 import toast from 'react-hot-toast';
 import QuillEditor from './QuillEditor';
 import ImprovedPDFViewer from './ImprovedPDFViewer';
+import { useDocumentManagement } from '../../hooks/useDocumentManagement';
+import { useFormManagement } from '../../hooks/useFormManagement';
+import { useApiManagement } from '../../hooks/useApiManagement';
 
 const ResumeManagement = ({ about, onUpdate }) => {
   const [resumes, setResumes] = useState(about?.resumes || []);
@@ -23,11 +25,29 @@ const ResumeManagement = ({ about, onUpdate }) => {
   const [selectedResume, setSelectedResume] = useState(null);
   const [editingTitle, setEditingTitle] = useState(null);
   const [newTitle, setNewTitle] = useState('');
+  const [loadingStates, setLoadingStates] = useState({});
+  const [showDocumentTypeModal, setShowDocumentTypeModal] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Use new optimized hooks
+  const documentManagement = useDocumentManagement();
+  const formManagement = useFormManagement();
+  const apiManagement = useApiManagement();
 
   useEffect(() => {
     setResumes(about?.resumes || []);
   }, [about]);
+
+  // Filter resumes based on document type
+  const getFilteredResumes = () => {
+    if (!about?.documentType || about.documentType === 'both') {
+      return resumes;
+    }
+    return resumes.filter(resume => resume.documentType === about.documentType);
+  };
+
+  const filteredResumes = getFilteredResumes();
 
   const handleResumeUpload = async (event) => {
     const file = event.target.files[0];
@@ -48,12 +68,25 @@ const ResumeManagement = ({ about, onUpdate }) => {
       return;
     }
 
+    // If document type is 'both', show modal to select document type
+    if (about?.documentType === 'both') {
+      setPendingFile(file);
+      setShowDocumentTypeModal(true);
+      return;
+    }
+
+    // Proceed with upload using the current document type
+    await uploadResume(file, about?.documentType || 'resume');
+  };
+
+  const uploadResume = async (file, documentType) => {
     setUploadingResume(true);
 
     try {
       const formData = new FormData();
       formData.append('resume', file);
       formData.append('title', file.name.split('.')[0]);
+      formData.append('documentType', documentType);
 
       const response = await fetch('/api/about/upload-resume', {
         method: 'POST',
@@ -63,18 +96,29 @@ const ResumeManagement = ({ about, onUpdate }) => {
         body: formData
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('Resume uploaded successfully!');
+      if (data && data.about) {
+        const docType = documentType === 'cv' ? 'CV' : 'Resume';
+        toast.success(`${docType} uploaded successfully!`);
         setResumes(data.about.resumes);
         onUpdate && onUpdate(data.about);
       } else {
-        toast.error(data.message || 'Failed to upload resume');
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Resume upload error:', error);
-      toast.error('Failed to upload resume');
+      if (error.message.includes('HTTP error')) {
+        toast.error('Server error occurred while uploading. Please try again.');
+      } else if (error.message.includes('Invalid response')) {
+        toast.error('Invalid response from server. Please try again.');
+      } else {
+        toast.error('Failed to upload resume. Please check your connection and try again.');
+      }
     } finally {
       setUploadingResume(false);
     }
@@ -93,22 +137,33 @@ const ResumeManagement = ({ about, onUpdate }) => {
         }
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('Resume deleted successfully!');
+      if (data && data.about) {
+        const docType = about?.documentType === 'cv' ? 'CV' : 
+                       about?.documentType === 'both' ? 'Document' : 'Resume';
+        toast.success(`${docType} deleted successfully!`);
         setResumes(data.about.resumes);
         onUpdate && onUpdate(data.about);
       } else {
-        toast.error(data.message || 'Failed to delete resume');
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Resume delete error:', error);
-      toast.error('Failed to delete resume');
+      if (error.message.includes('HTTP error')) {
+        toast.error('Server error occurred while deleting. Please try again.');
+      } else {
+        toast.error('Failed to delete resume. Please try again.');
+      }
     }
   };
 
   const handleSetActiveResume = async (resumeId) => {
+    setLoadingStates(prev => ({ ...prev, [resumeId]: true }));
     try {
       const response = await fetch(`/api/about/resume/${resumeId}/active`, {
         method: 'PUT',
@@ -118,18 +173,28 @@ const ResumeManagement = ({ about, onUpdate }) => {
         }
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
+      if (data && data.about) {
         toast.success('Active resume updated successfully!');
         setResumes(data.about.resumes);
         onUpdate && onUpdate(data.about);
       } else {
-        toast.error(data.message || 'Failed to set active resume');
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Set active resume error:', error);
-      toast.error('Failed to set active resume');
+      if (error.message.includes('HTTP error')) {
+        toast.error('Server error occurred while updating. Please try again.');
+      } else {
+        toast.error('Failed to set active resume. Please try again.');
+      }
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [resumeId]: false }));
     }
   };
 
@@ -149,20 +214,30 @@ const ResumeManagement = ({ about, onUpdate }) => {
         body: JSON.stringify({ title: newTitle })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('Resume title updated successfully!');
+      if (data && data.about) {
+        const docType = about?.documentType === 'cv' ? 'CV' : 
+                       about?.documentType === 'both' ? 'Document' : 'Resume';
+        toast.success(`${docType} title updated successfully!`);
         setResumes(data.about.resumes);
         onUpdate && onUpdate(data.about);
         setEditingTitle(null);
         setNewTitle('');
       } else {
-        toast.error(data.message || 'Failed to update title');
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Update title error:', error);
-      toast.error('Failed to update title');
+      if (error.message.includes('HTTP error')) {
+        toast.error('Server error occurred while updating title. Please try again.');
+      } else {
+        toast.error('Failed to update title. Please try again.');
+      }
     }
   };
 
@@ -290,13 +365,108 @@ const ResumeManagement = ({ about, onUpdate }) => {
     return (bytes / 1024 / 1024).toFixed(2) + ' MB';
   };
 
+  const handleDocumentTypeSelection = async (selectedType) => {
+    if (pendingFile) {
+      await uploadResume(pendingFile, selectedType);
+      setPendingFile(null);
+      setShowDocumentTypeModal(false);
+    }
+  };
+
+  const cancelDocumentTypeSelection = () => {
+    setPendingFile(null);
+    setShowDocumentTypeModal(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Resume Management</h2>
-          <p className="text-gray-600">Manage multiple resumes and choose which one to display</p>
+          <h2 className="text-2xl font-bold text-gray-900">CV & Resume Management</h2>
+          <p className="text-gray-600">Manage multiple CVs and resumes, choose which one to display</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">Document Type:</span>
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                type="button"
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  about?.documentType === 'resume' || !about?.documentType
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={async () => {
+                  try {
+                    const updatedAbout = { ...about, documentType: 'resume' };
+                    const result = await onUpdate(updatedAbout);
+                    if (result?.success !== false) {
+                      toast.success('Document type set to Resume');
+                    }
+                  } catch (error) {
+                    console.error('Failed to update document type:', error);
+                    toast.error('Failed to update document type');
+                  }
+                }}
+              >
+                Resume
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  about?.documentType === 'cv'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={async () => {
+                  try {
+                    const updatedAbout = { ...about, documentType: 'cv' };
+                    const result = await onUpdate(updatedAbout);
+                    if (result?.success !== false) {
+                      toast.success('Document type set to CV');
+                    }
+                  } catch (error) {
+                    console.error('Failed to update document type:', error);
+                    toast.error('Failed to update document type');
+                  }
+                }}
+              >
+                CV
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  about?.documentType === 'both'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={async () => {
+                  try {
+                    const updatedAbout = { ...about, documentType: 'both' };
+                    const result = await onUpdate(updatedAbout);
+                    if (result?.success !== false) {
+                      toast.success('Document type set to Resume and CV');
+                    }
+                  } catch (error) {
+                    console.error('Failed to update document type:', error);
+                    toast.error('Failed to update document type');
+                  }
+                }}
+              >
+                Both
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          Currently managing: <span className="font-medium text-gray-700">
+            {about?.documentType === 'cv' ? 'CV' : 
+             about?.documentType === 'both' ? 'Resume and CV' : 'Resume'} documents
+          </span>
         </div>
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -311,7 +481,8 @@ const ResumeManagement = ({ about, onUpdate }) => {
           ) : (
             <>
               <Plus className="w-4 h-4" />
-              <span>Upload Resume</span>
+              <span>Upload {about?.documentType === 'cv' ? 'CV' : 
+                     about?.documentType === 'both' ? 'Document' : 'Resume'}</span>
             </>
           )}
         </button>
@@ -328,7 +499,7 @@ const ResumeManagement = ({ about, onUpdate }) => {
       {/* Resumes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence>
-          {resumes.map((resume, index) => (
+          {filteredResumes.map((resume, index) => (
             <motion.div
               key={resume._id || index}
               initial={{ opacity: 0, y: 20 }}
@@ -350,13 +521,21 @@ const ResumeManagement = ({ about, onUpdate }) => {
                           type="text"
                           value={newTitle}
                           onChange={(e) => setNewTitle(e.target.value)}
-                          onKeyPress={(e) => {
+                          onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleUpdateTitle(resume._id, newTitle);
+                            } else if (e.key === 'Escape') {
+                              setEditingTitle(null);
+                              setNewTitle('');
                             }
                           }}
                           onBlur={() => {
-                            handleUpdateTitle(resume._id, newTitle);
+                            if (newTitle.trim() && newTitle !== resume.title) {
+                              handleUpdateTitle(resume._id, newTitle);
+                            } else {
+                              setEditingTitle(null);
+                              setNewTitle('');
+                            }
                           }}
                           className="text-sm font-semibold bg-transparent border-b border-gray-300 focus:border-primary-500 focus:outline-none"
                           autoFocus
@@ -410,12 +589,17 @@ const ResumeManagement = ({ about, onUpdate }) => {
                       ? 'bg-primary-100 text-primary-700 cursor-not-allowed'
                       : 'bg-gray-100 hover:bg-primary-100 text-gray-700 hover:text-primary-700'
                   }`}
-                  disabled={resume.isActive}
+                  disabled={resume.isActive || loadingStates[resume._id]}
                 >
                   {resume.isActive ? (
                     <>
                       <Star className="w-4 h-4 fill-current" />
                       <span>Active</span>
+                    </>
+                  ) : loadingStates[resume._id] ? (
+                    <>
+                      <div className="loading-spinner w-4 h-4"></div>
+                      <span>Setting...</span>
                     </>
                   ) : (
                     <>
@@ -465,21 +649,28 @@ const ResumeManagement = ({ about, onUpdate }) => {
       </div>
 
       {/* Empty State */}
-      {resumes.length === 0 && (
+      {filteredResumes.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center py-12"
         >
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes uploaded</h3>
-          <p className="text-gray-500 mb-6">Upload your first resume to get started</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No {about?.documentType === 'cv' ? 'CVs' : 
+                 about?.documentType === 'both' ? 'documents' : 'resumes'} uploaded
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Upload your first {about?.documentType === 'cv' ? 'CV' : 
+                              about?.documentType === 'both' ? 'document' : 'resume'} to get started
+          </p>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="btn-primary flex items-center space-x-2 mx-auto"
           >
-            <Upload className="w-4 h-4" />
-            <span>Upload Resume</span>
+            <Plus className="w-4 h-4" />
+            <span>Upload {about?.documentType === 'cv' ? 'CV' : 
+                         about?.documentType === 'both' ? 'Document' : 'Resume'}</span>
           </button>
         </motion.div>
       )}
@@ -510,6 +701,40 @@ const ResumeManagement = ({ about, onUpdate }) => {
             setSelectedResume(null);
           }}
         />
+      )}
+
+      {/* Document Type Selection Modal */}
+      {showDocumentTypeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Select Document Type
+            </h3>
+            <p className="text-gray-600 mb-6">
+              What type of document is "{pendingFile?.name}"?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => handleDocumentTypeSelection('resume')}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Resume
+              </button>
+              <button
+                onClick={() => handleDocumentTypeSelection('cv')}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                CV
+              </button>
+            </div>
+            <button
+              onClick={cancelDocumentTypeSelection}
+              className="w-full mt-3 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

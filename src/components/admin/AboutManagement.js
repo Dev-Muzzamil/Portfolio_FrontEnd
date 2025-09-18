@@ -1,33 +1,91 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { Save, User, Plus, Trash2, Camera, X, Edit3 } from 'lucide-react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { Save, User, Plus, Trash2, Camera, X, Edit3, Link, ExternalLink, Code, Award, BookOpen } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import PhotoEditor from './PhotoEditor';
-import ResumeManagement from './ResumeManagement';
+import EducationLinking from './EducationLinking';
+import FormField from '../common/FormField';
+import FormSection from '../common/FormSection';
+import Button from '../common/Button';
+import AnimatedSection from '../common/AnimatedSection';
+import { ValidatedInput, ValidatedTextarea } from '../common/FormValidation';
+import { LoadingButton } from '../common/LoadingStates';
+import { useDocumentManagement } from '../../hooks/useDocumentManagement';
+import { useFormManagement } from '../../hooks/useFormManagement';
+import { useApiManagement } from '../../hooks/useApiManagement';
 import axios from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
 const AboutManagement = () => {
-  const { about, updateAbout, loading } = useData();
+  const { about, updateAbout, loading, projects, certificates, skills } = useData();
   const { resetInactivityForUpload } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoEditorImageUrl, setPhotoEditorImageUrl] = useState(null);
+  const [showEducationLinking, setShowEducationLinking] = useState(false);
+  const [selectedEducationIndex, setSelectedEducationIndex] = useState(null);
   const fileInputRef = useRef(null);
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
+
+  // Use new optimized hooks
+  const documentManagement = useDocumentManagement();
+  const formManagement = useFormManagement();
+  const apiManagement = useApiManagement();
+  const { register, handleSubmit, formState: { errors }, reset, watch, control, setValue } = useForm({
     defaultValues: about || {}
+  });
+
+  // Field arrays for dynamic bio paragraphs
+  const { fields: bioFields, append: appendBio, remove: removeBio } = useFieldArray({
+    control,
+    name: "bio"
+  });
+
+  const { fields: shortBioFields, append: appendShortBio, remove: removeShortBio } = useFieldArray({
+    control,
+    name: "shortBio"
   });
 
   // Reset form when about data changes
   useEffect(() => {
     if (about) {
-      reset(about);
+      // Ensure bio and shortBio are arrays
+      const aboutData = {
+        ...about,
+        bio: Array.isArray(about.bio) ? about.bio : [about.bio || ''],
+        shortBio: Array.isArray(about.shortBio) ? about.shortBio : [about.shortBio || '']
+      };
+      reset(aboutData);
     }
   }, [about, reset]);
+
+  // Helper functions for bio management
+  const addBioParagraph = () => {
+    appendBio('');
+  };
+
+  const removeBioParagraph = (index) => {
+    if (bioFields.length > 1) {
+      removeBio(index);
+    } else {
+      toast.error('At least one bio paragraph is required');
+    }
+  };
+
+  const addShortBioParagraph = () => {
+    appendShortBio('');
+  };
+
+  const removeShortBioParagraph = (index) => {
+    if (shortBioFields.length > 1) {
+      removeShortBio(index);
+    } else {
+      toast.error('At least one short bio paragraph is required');
+    }
+  };
 
   const onSubmit = async (data) => {
     const result = await updateAbout(data);
@@ -71,6 +129,25 @@ const AboutManagement = () => {
     });
   };
 
+  const handleEducationLinking = (index) => {
+    setSelectedEducationIndex(index);
+    setShowEducationLinking(true);
+  };
+
+  const handleEducationUpdate = (index, updatedEducation) => {
+    const currentEducation = watch('education') || [];
+    const newEducation = [...currentEducation];
+    newEducation[index] = updatedEducation;
+    setValue('education', newEducation);
+  };
+
+  const getLinkedItemsCount = (education) => {
+    const projectsCount = education?.linkedProjects?.length || 0;
+    const certificatesCount = education?.linkedCertificates?.length || 0;
+    const skillsCount = education?.linkedSkills?.length || 0;
+    return projectsCount + certificatesCount + skillsCount;
+  };
+
   const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -112,7 +189,7 @@ const AboutManagement = () => {
       if (response.ok) {
         toast.success('Profile photo deleted successfully!');
         // Refresh the about data
-        window.location.reload();
+        // Data will be updated automatically via DataContext
       } else {
         const data = await response.json();
         toast.error(data.message || 'Failed to delete photo');
@@ -130,8 +207,6 @@ const AboutManagement = () => {
       setShowPhotoEditor(true);
     }
   };
-
-
 
   const handlePhotoEditorSave = async (croppedFile) => {
     setUploadingPhoto(true);
@@ -163,7 +238,7 @@ const AboutManagement = () => {
       });
 
       toast.success('Profile photo updated successfully!');
-      window.location.reload();
+      // Data will be updated automatically via DataContext
     } catch (error) {
       console.error('Photo update error:', error);
       
@@ -188,10 +263,8 @@ const AboutManagement = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+      <AnimatedSection
+        direction="up"
         className="flex items-center justify-between"
       >
         <div>
@@ -200,14 +273,14 @@ const AboutManagement = () => {
             Manage your personal information and professional details
           </p>
         </div>
-        <button
+        <Button
+          variant="primary"
+          icon={User}
           onClick={() => setIsEditing(!isEditing)}
-          className="btn-primary flex items-center space-x-2"
         >
-          <User className="w-4 h-4" />
-          <span>{isEditing ? 'Cancel' : 'Edit'}</span>
-        </button>
-      </motion.div>
+          {isEditing ? 'Cancel' : 'Edit'}
+        </Button>
+      </AnimatedSection>
 
       {/* Profile Photo Section */}
       <motion.div
@@ -281,22 +354,6 @@ const AboutManagement = () => {
             </p>
           </div>
         </div>
-      </motion.div>
-
-      {/* Resume Management Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.07 }}
-        className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6"
-      >
-        <ResumeManagement 
-          about={about} 
-          onUpdate={(updatedAbout) => {
-            // Update the about data in the parent component
-            window.location.reload();
-          }} 
-        />
       </motion.div>
 
       {/* Form */}
@@ -385,92 +442,103 @@ const AboutManagement = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Bio</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Short Bio *
-                </label>
-                <textarea
-                  {...register('shortBio', { required: 'Short bio is required' })}
-                  disabled={!isEditing}
-                  rows={3}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="Brief description for hero section"
-                />
-                {errors.shortBio && (
-                  <p className="mt-1 text-sm text-red-600">{errors.shortBio.message}</p>
-                )}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Short Bio *
+                  </label>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={addShortBioParagraph}
+                      className="btn-secondary text-xs py-1 px-2 flex items-center space-x-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+1</span>
+                    </button>
+                  )}
+                </div>
+                
+                {shortBioFields.map((field, index) => (
+                  <div key={field.id} className="mb-3">
+                    <div className="flex items-start space-x-2">
+                      <textarea
+                        {...register(`shortBio.${index}`, { 
+                          required: 'Short bio paragraph is required',
+                          maxLength: { value: 200, message: 'Paragraph must be less than 200 characters' }
+                        })}
+                        disabled={!isEditing}
+                        rows={3}
+                        className="input-field disabled:bg-gray-100 flex-1"
+                        placeholder={`Short bio paragraph ${index + 1}`}
+                      />
+                      {isEditing && shortBioFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeShortBioParagraph(index)}
+                          className="mt-2 text-red-600 hover:text-red-700 transition-colors"
+                          title="Remove paragraph"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    {errors.shortBio?.[index] && (
+                      <p className="mt-1 text-sm text-red-600">{errors.shortBio[index].message}</p>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Bio *
-                </label>
-                <textarea
-                  {...register('bio', { required: 'Bio is required' })}
-                  disabled={!isEditing}
-                  rows={6}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="Detailed description about yourself"
-                />
-                {errors.bio && (
-                  <p className="mt-1 text-sm text-red-600">{errors.bio.message}</p>
-                )}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Full Bio *
+                  </label>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={addBioParagraph}
+                      className="btn-secondary text-xs py-1 px-2 flex items-center space-x-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+1</span>
+                    </button>
+                  )}
+                </div>
+                
+                {bioFields.map((field, index) => (
+                  <div key={field.id} className="mb-3">
+                    <div className="flex items-start space-x-2">
+                      <textarea
+                        {...register(`bio.${index}`, { 
+                          required: 'Bio paragraph is required'
+                        })}
+                        disabled={!isEditing}
+                        rows={6}
+                        className="input-field disabled:bg-gray-100 flex-1"
+                        placeholder={`Bio paragraph ${index + 1}`}
+                      />
+                      {isEditing && bioFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeBioParagraph(index)}
+                          className="mt-2 text-red-600 hover:text-red-700 transition-colors"
+                          title="Remove paragraph"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    {errors.bio?.[index] && (
+                      <p className="mt-1 text-sm text-red-600">{errors.bio[index].message}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Social Links */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Social Links</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GitHub
-                </label>
-                <input
-                  {...register('socialLinks.github')}
-                  disabled={!isEditing}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="https://github.com/username"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  LinkedIn
-                </label>
-                <input
-                  {...register('socialLinks.linkedin')}
-                  disabled={!isEditing}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="https://linkedin.com/in/username"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Twitter
-                </label>
-                <input
-                  {...register('socialLinks.twitter')}
-                  disabled={!isEditing}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="https://twitter.com/username"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Website
-                </label>
-                <input
-                  {...register('socialLinks.website')}
-                  disabled={!isEditing}
-                  className="input-field disabled:bg-gray-100"
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Social Links - Moved to dedicated section */}
 
           {/* Experience */}
           <div>
@@ -591,16 +659,36 @@ const AboutManagement = () => {
               {(watch('education') || []).map((edu, index) => (
                 <div key={index} className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium text-gray-900">Education {index + 1}</h3>
-                    {isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => removeEducation(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center space-x-3">
+                      <h3 className="font-medium text-gray-900">Education {index + 1}</h3>
+                      {getLinkedItemsCount(edu) > 0 && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                          {getLinkedItemsCount(edu)} linked
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => handleEducationLinking(index)}
+                          className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Link to projects, certificates, and skills"
+                        >
+                          <Link className="w-4 h-4" />
+                          <span className="text-sm">Link</span>
+                        </button>
+                      )}
+                      {isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => removeEducation(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -664,6 +752,95 @@ const AboutManagement = () => {
                         placeholder="Additional details about your education"
                       />
                     </div>
+
+                    {/* Linked Items Display */}
+                    {getLinkedItemsCount(edu) > 0 && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Linked Items
+                        </label>
+                        <div className="space-y-3">
+                          {/* Linked Projects */}
+                          {edu.linkedProjects && edu.linkedProjects.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                                <Code className="w-4 h-4 mr-1" />
+                                Projects ({edu.linkedProjects.length})
+                              </h4>
+                              <div className="space-y-2">
+                                {edu.linkedProjects.map((projectId) => {
+                                  const project = projects.find(p => p._id === projectId);
+                                  return project ? (
+                                    <div key={projectId} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                                      <div className="flex-1">
+                                        <span className="font-medium text-blue-900">{project.title}</span>
+                                        {project.completedAtInstitution && (
+                                          <p className="text-xs text-blue-600 mt-1">
+                                            Completed at: {project.completedAtInstitution}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : null;
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Linked Certificates */}
+                          {edu.linkedCertificates && edu.linkedCertificates.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                                <Award className="w-4 h-4 mr-1" />
+                                Certificates ({edu.linkedCertificates.length})
+                              </h4>
+                              <div className="space-y-2">
+                                {edu.linkedCertificates.map((certId) => {
+                                  const cert = certificates.find(c => c._id === certId);
+                                  return cert ? (
+                                    <div key={certId} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                                      <div className="flex-1">
+                                        <span className="font-medium text-green-900">{cert.title}</span>
+                                        <p className="text-xs text-green-700">{cert.issuer}</p>
+                                        {cert.completedAtInstitution && (
+                                          <p className="text-xs text-green-600 mt-1">
+                                            Completed at: {cert.completedAtInstitution}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : null;
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Linked Skills */}
+                          {edu.linkedSkills && edu.linkedSkills.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                                <BookOpen className="w-4 h-4 mr-1" />
+                                Skills ({edu.linkedSkills.length})
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {edu.linkedSkills.map((skillId) => {
+                                  const skill = skills.find(s => s._id === skillId);
+                                  return skill ? (
+                                    <span
+                                      key={skillId}
+                                      className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs"
+                                    >
+                                      <BookOpen className="w-3 h-3" />
+                                      <span>{skill.name}</span>
+                                    </span>
+                                  ) : null;
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -701,10 +878,22 @@ const AboutManagement = () => {
           }}
         />
       )}
+
+      {/* Education Linking Modal */}
+      {showEducationLinking && selectedEducationIndex !== null && (
+        <EducationLinking
+          educationIndex={selectedEducationIndex}
+          education={(watch('education') || [])[selectedEducationIndex]}
+          onUpdate={handleEducationUpdate}
+          isOpen={showEducationLinking}
+          onClose={() => {
+            setShowEducationLinking(false);
+            setSelectedEducationIndex(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default AboutManagement;
-
-

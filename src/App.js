@@ -7,9 +7,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Components
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import InactivityWarning from './components/InactivityWarning';
+import ScrollProgress from './components/ScrollProgress';
+import PageScrollToTop from './components/PageScrollToTop';
+import Head from './components/Head';
 import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -20,10 +21,22 @@ import ProtectedRoute from './components/ProtectedRoute';
 const AppContent = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Scroll to top on route change and page load
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // Also scroll to top on initial page load
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <PageScrollToTop />
+      <Head />
+      {!isAdminRoute && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -39,9 +52,8 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isAdminRoute && <Footer />}
       <ScrollToTop />
-      <InactivityWarning />
+      {!isAdminRoute && <ScrollProgress />}
       <Toaster 
         position="top-right"
         toastOptions={{

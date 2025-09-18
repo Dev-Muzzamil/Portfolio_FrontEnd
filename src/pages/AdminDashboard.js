@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -10,7 +10,9 @@ import {
   LogOut,
   Menu,
   X,
-  Layers
+  Layers,
+  FileText,
+  Share2,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -19,11 +21,35 @@ import LoadingSpinner from '../components/LoadingSpinner';
 // Admin Components
 import DashboardOverview from '../components/admin/DashboardOverview';
 import AboutManagement from '../components/admin/AboutManagement';
-import ProjectsManagement from '../components/admin/ProjectsManagement';
-import CertificatesManagement from '../components/admin/CertificatesManagement';
-import SkillsManagement from '../components/admin/SkillsManagement';
-import UnifiedSkillsManagement from '../components/admin/UnifiedSkillsManagement';
+import ProjectsManagementUnified from '../components/admin/ProjectsManagementUnified';
+import CertificatesManagementUnified from '../components/admin/CertificatesManagementUnified';
+import SimplifiedSkillsManagement from '../components/admin/SimplifiedSkillsManagement';
 import SiteConfiguration from '../components/admin/SiteConfiguration';
+import ResumeManagement from '../components/admin/ResumeManagement';
+import SocialMediaManagement from '../components/admin/SocialMediaManagement';
+
+// Wrapper component for Resume Management
+const ResumeManagementWrapper = () => {
+  const { about, updateAbout } = useData();
+  
+  const handleUpdate = async (updatedAbout) => {
+    try {
+      const result = await updateAbout(updatedAbout);
+      return result;
+    } catch (error) {
+      console.error('Failed to update about data:', error);
+      throw error;
+    }
+  };
+  
+  return (
+    <ResumeManagement 
+      key={about?.documentType || 'default'}
+      about={about} 
+      onUpdate={handleUpdate}
+    />
+  );
+};
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,7 +63,8 @@ const AdminDashboard = () => {
     { name: 'Projects', href: '/admin/projects', icon: FolderOpen },
     { name: 'Certificates', href: '/admin/certificates', icon: Award },
     { name: 'Skills', href: '/admin/skills', icon: Wrench },
-    { name: 'Unified Skills', href: '/admin/unified-skills', icon: Layers },
+    { name: 'Resume/CV', href: '/admin/resume', icon: FileText },
+    { name: 'Social Media', href: '/admin/social-media', icon: Share2 },
     { name: 'Site Config', href: '/admin/configuration', icon: Settings },
   ];
 
@@ -170,10 +197,11 @@ const AdminDashboard = () => {
             <Routes>
               <Route path="/" element={<DashboardOverview />} />
               <Route path="/about" element={<AboutManagement />} />
-              <Route path="/projects" element={<ProjectsManagement />} />
-              <Route path="/certificates" element={<CertificatesManagement />} />
-              <Route path="/skills" element={<SkillsManagement />} />
-              <Route path="/unified-skills" element={<UnifiedSkillsManagement />} />
+              <Route path="/projects" element={<ProjectsManagementUnified />} />
+              <Route path="/certificates" element={<CertificatesManagementUnified />} />
+              <Route path="/skills" element={<SimplifiedSkillsManagement />} />
+              <Route path="/resume" element={<ResumeManagementWrapper />} />
+              <Route path="/social-media" element={<SocialMediaManagement />} />
               <Route path="/configuration" element={<SiteConfiguration />} />
             </Routes>
           </div>

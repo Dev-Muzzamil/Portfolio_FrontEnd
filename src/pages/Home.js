@@ -1,22 +1,22 @@
 import React from 'react';
 import Hero from '../components/sections/Hero';
 import About from '../components/sections/About';
-import Projects from '../components/sections/Projects';
+import ProjectsUnified from '../components/sections/ProjectsUnified';
 import Skills from '../components/sections/Skills';
-import Certificates from '../components/sections/Certificates';
+import CertificatesUnified from '../components/sections/CertificatesUnified';
 import GitHubProfile from '../components/sections/GitHubProfile';
-import Contact from '../components/sections/Contact';
+import ContactFooter from '../components/sections/ContactFooter';
 
 const Home = () => {
   return (
     <div className="min-h-screen">
       <Hero />
       <About />
-      <Projects />
+      <ProjectsUnified mode="home" />
       <Skills />
-      <Certificates />
+      <CertificatesUnified mode="home" />
       <GitHubProfile />
-      <Contact />
+      <ContactFooter />
     </div>
   );
 };

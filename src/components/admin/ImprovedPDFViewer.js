@@ -12,32 +12,38 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
   const [retryCount, setRetryCount] = useState(0);
   const iframeRef = useRef(null);
 
-  useEffect(() => {
-    loadPDF();
-  }, [pdfUrl, loadPDF]);
+  // Define all functions first
+  const getPDFUrl = useCallback(() => {
+    console.log('Original PDF URL:', pdfUrl);
+    
+    // For Cloudinary URLs, ensure we get the direct, publicly accessible URL
+    if (pdfUrl.includes('cloudinary.com')) {
+      // Remove any transformation parameters and get the direct URL
+      const baseUrl = pdfUrl.split('/upload/')[0] + '/upload/';
+      const publicId = pdfUrl.split('/upload/')[1];
+      const cleanPublicId = publicId.split('?')[0]; // Remove query parameters
+      return `${baseUrl}${cleanPublicId}`;
+    }
+    
+    return pdfUrl;
+  }, [pdfUrl]);
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose();
-      } else if (event.key === '+' || event.key === '=') {
-        event.preventDefault();
-        handleZoomIn();
-      } else if (event.key === '-') {
-        event.preventDefault();
-        handleZoomOut();
-      } else if (event.key === 'r' || event.key === 'R') {
-        event.preventDefault();
-        handleRotate();
-      } else if (event.key === 'f' || event.key === 'F') {
-        event.preventDefault();
-        toggleFullscreen();
-      }
-    };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, toggleFullscreen, handleZoomIn, handleZoomOut, handleRotate]);
+  const handleZoomIn = useCallback(() => {
+    setScale(prev => Math.min(prev + 0.25, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setScale(prev => Math.max(prev - 0.25, 0.5));
+  }, []);
+
+  const handleRotate = useCallback(() => {
+    setRotation(prev => (prev + 90) % 360);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
 
   const loadPDF = useCallback(async () => {
     setIsLoading(true);
@@ -88,7 +94,34 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
       setIsLoading(false);
       toast.error(`Failed to load PDF: ${error.message}`);
     }
-  }, [pdfUrl]);
+  }, [pdfUrl, getPDFUrl]);
+
+  useEffect(() => {
+    loadPDF();
+  }, [pdfUrl, loadPDF]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      } else if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        handleZoomIn();
+      } else if (event.key === '-') {
+        event.preventDefault();
+        handleZoomOut();
+      } else if (event.key === 'r' || event.key === 'R') {
+        event.preventDefault();
+        handleRotate();
+      } else if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, toggleFullscreen, handleZoomIn, handleZoomOut, handleRotate]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
@@ -156,51 +189,6 @@ const ImprovedPDFViewer = ({ pdfUrl, fileName, onClose, hideDownload = false }) 
     }
   };
 
-  const handleZoomIn = useCallback(() => {
-    setScale(prev => Math.min(prev + 0.25, 3));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setScale(prev => Math.max(prev - 0.25, 0.5));
-  }, []);
-
-  const handleRotate = useCallback(() => {
-    setRotation(prev => (prev + 90) % 360);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(!isFullscreen);
-  }, [isFullscreen]);
-
-  const getPDFUrl = () => {
-    console.log('Original PDF URL:', pdfUrl);
-    
-    // For Cloudinary URLs, ensure we get the direct, publicly accessible URL
-    let directUrl = pdfUrl;
-    
-    if (pdfUrl.includes('cloudinary.com')) {
-      // Extract the public ID and format from the URL
-      const urlParts = pdfUrl.split('/upload/');
-      if (urlParts.length === 2) {
-        const baseUrl = urlParts[0] + '/upload/';
-        const pathPart = urlParts[1];
-        
-        // Split by version and get the actual file path
-        const versionMatch = pathPart.match(/^v\d+\/(.+)$/);
-        if (versionMatch) {
-          const filePath = versionMatch[1];
-          // Create direct URL without any transformations
-          directUrl = `${baseUrl}${filePath}`;
-        } else {
-          // Fallback: use the original URL
-          directUrl = pdfUrl;
-        }
-      }
-      console.log('Direct Cloudinary URL:', directUrl);
-    }
-    
-    return directUrl;
-  };
 
   const getViewerUrl = () => {
     const directUrl = getPDFUrl();

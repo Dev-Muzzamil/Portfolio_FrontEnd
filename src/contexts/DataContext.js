@@ -48,20 +48,22 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  const refreshSkills = async () => {
+    try {
+      const skillsRes = await axios.get('/api/skills');
+      setSkills(skillsRes.data);
+    } catch (error) {
+      console.error('Error refreshing skills:', error);
+    }
+  };
+
   // About methods
   const updateAbout = async (data) => {
-    // Optimistic update - update UI immediately
-    const previousAbout = about;
-    setAbout(data);
-    
     try {
       const response = await axios.put('/api/about', data);
       setAbout(response.data);
       return { success: true };
     } catch (error) {
-      // Revert on error
-      setAbout(previousAbout);
-      
       // Handle different types of errors
       if (error.response?.status === 401) {
         // Auth error - let the interceptor handle it
@@ -221,6 +223,11 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Add certificate to state (for file uploads)
+  const addCertificate = (certificate) => {
+    setCertificates(prev => [...prev, certificate]);
+  };
+
   // Skill methods
   const createSkill = async (data) => {
     // Optimistic update - add skill immediately with temporary ID
@@ -339,13 +346,15 @@ export const DataProvider = ({ children }) => {
     createCertificate,
     updateCertificate,
     deleteCertificate,
+    addCertificate,
     createSkill,
     updateSkill,
     deleteSkill,
     bulkDeleteSkills,
     updateConfiguration,
     resetConfiguration,
-    refreshData: fetchAllData
+    refreshData: fetchAllData,
+    refreshSkills
   };
 
   return (

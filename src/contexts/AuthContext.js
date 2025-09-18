@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../utils/axiosConfig';
 
 const AuthContext = createContext();
@@ -14,80 +14,65 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
-  const inactivityTimerRef = useRef(null);
-  const warningTimerRef = useRef(null);
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
-  const WARNING_TIME = 5 * 60 * 1000; // 5 minutes before logout
-
-  // Axios base URL is already set in axiosConfig.js
+  const [isUploading, setIsUploading] = useState(false);
 
   // Clear tokens and logout
-  const clearTokensAndLogout = () => {
+  const clearTokensAndLogout = useCallback(() => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setLoading(false);
-    console.log('🔒 Auto-logout: Tokens cleared and user logged out');
-  };
+    console.log('🔒 Logout: Tokens cleared and user logged out');
+  }, []);
 
-  // Reset inactivity timer
-  const resetInactivityTimer = useCallback(() => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current);
-    }
-    
-    if (user) {
-      // Hide warning if it was showing
-      setShowInactivityWarning(false);
+  // Refresh token function
+  const refreshToken = useCallback(async () => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken');
+      if (!refreshTokenValue) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await axios.post('/api/auth/refresh', { 
+        refreshToken: refreshTokenValue 
+      });
       
-      // Set warning timer (5 minutes before logout)
-      warningTimerRef.current = setTimeout(() => {
-        setShowInactivityWarning(true);
-        console.log('⚠️ Inactivity warning: 5 minutes until auto-logout');
-      }, INACTIVITY_TIMEOUT - WARNING_TIME);
+      const { token, user: userData } = response.data;
       
-      // Set logout timer
-      inactivityTimerRef.current = setTimeout(() => {
-        console.log('⏰ Inactivity timeout reached - logging out user');
-        clearTokensAndLogout();
-      }, INACTIVITY_TIMEOUT);
+      // Update stored token
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      console.log('🔄 Token refreshed successfully');
+      setUser(userData);
+      return true;
+    } catch (error) {
+      console.log('❌ Token refresh failed:', error.message);
+      clearTokensAndLogout();
+      return false;
     }
-  }, [user, INACTIVITY_TIMEOUT]);
-
-  // Handle user activity
-  const handleUserActivity = useCallback(() => {
-    if (user) {
-      resetInactivityTimer();
-    }
-  }, [user, resetInactivityTimer]);
-
-  // Reset inactivity timer during uploads (exported for use in upload components)
-  const resetInactivityForUpload = useCallback(() => {
-    if (user) {
-      resetInactivityTimer();
-      console.log('🔄 Upload activity detected - inactivity timer reset');
-    }
-  }, [user, resetInactivityTimer]);
+  }, [clearTokensAndLogout]);
 
   // Fetch user function
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       console.log('🔍 Fetching user data...');
       const response = await axios.get('/api/auth/me');
       console.log('✅ User data fetched successfully:', response.data.user);
       setUser(response.data.user);
-      // Start inactivity timer after successful login
-      resetInactivityTimer();
     } catch (error) {
       console.log('❌ Error fetching user:', error.response?.status, error.message);
-      // Only clear tokens if it's an auth error, not a network error
+      
+      // If 401, try to refresh token
       if (error.response?.status === 401) {
-        clearTokensAndLogout();
+        const refreshed = await refreshToken();
+        if (!refreshed) {
+          // Refresh failed, user needs to login again
+          return;
+        }
       } else {
         // For network errors, just set loading to false
         setLoading(false);
@@ -95,9 +80,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshToken]);
 
-  // Initial auth check effect
+  // Initial auth check - run only once
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -106,86 +91,57 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, [fetchUser]); // Include fetchUser dependency
+  }, [fetchUser]);
 
-  // Activity listeners effect
-  useEffect(() => {
-    // Set up activity listeners
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, true);
-    });
-
-    // Set up beforeunload listener to clear tokens when window is closed
-    const handleBeforeUnload = () => {
-      clearTokensAndLogout();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Cleanup function
-    return () => {
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
-      if (warningTimerRef.current) {
-        clearTimeout(warningTimerRef.current);
-      }
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserActivity, true);
-      });
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [handleUserActivity]); // Only re-run when handleUserActivity changes
-
+  // Login function
   const login = async (email, password) => {
     console.log('🔐 Login attempt started for:', email);
     setLoading(true);
     try {
       const response = await axios.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
+      const { token, refreshToken, user: userData } = response.data;
+      
+      // Store tokens
+      localStorage.setItem('token', token);
+      localStorage.setItem('refreshToken', refreshToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       console.log('✅ Login successful, setting token and user');
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
+      setUser(userData);
       
-      // Start inactivity timer after successful login
-      resetInactivityTimer();
-      
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
       console.log('❌ Login failed:', error.response?.data?.message || error.message);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        error: error.response?.data?.message || 'Login failed' 
       };
     } finally {
       setLoading(false);
     }
   };
 
+  // Logout function
   const logout = () => {
-    // Clear all timers
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current);
-    }
-    
-    // Clear tokens and logout
     clearTokensAndLogout();
-    setShowInactivityWarning(false);
     console.log('🔒 Manual logout: User logged out and tokens cleared');
   };
 
-  // Dismiss warning and extend session
-  const dismissWarning = () => {
-    setShowInactivityWarning(false);
-    resetInactivityTimer();
-    console.log('✅ Inactivity warning dismissed - session extended');
-  };
+  // Upload session management - simplified
+  const startUploadSession = useCallback(() => {
+    console.log('🚀 Starting upload session');
+    setIsUploading(true);
+  }, []);
+
+  const endUploadSession = useCallback(() => {
+    console.log('🏁 Ending upload session');
+    setIsUploading(false);
+  }, []);
+
+  // Legacy function for compatibility
+  const resetInactivityForUpload = useCallback(() => {
+    console.log('🔄 Upload activity detected');
+  }, []);
 
   const value = {
     user,
@@ -193,9 +149,12 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user,
-    showInactivityWarning,
-    dismissWarning,
-    resetInactivityForUpload
+    showInactivityWarning: false, // Always false - no auto-logout
+    dismissWarning: () => {}, // No-op function
+    resetInactivityForUpload,
+    startUploadSession,
+    endUploadSession,
+    isUploading
   };
 
   return (
@@ -204,5 +163,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-

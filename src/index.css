@@ -10,6 +10,45 @@
   html {
     scroll-behavior: smooth;
   }
+  
+  /* Ensure page starts at top */
+  html, body {
+    scroll-behavior: auto;
+  }
+  
+  /* Reset scroll position on page load */
+  html {
+    scroll-padding-top: 0;
+  }
+  
+  /* Enhanced scroll behavior */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  /* Section transition effects */
+  .section-transition {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  /* Smooth fade transitions */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Staggered animation delays */
+  .stagger-1 { transition-delay: 0.1s; }
+  .stagger-2 { transition-delay: 0.2s; }
+  .stagger-3 { transition-delay: 0.3s; }
+  .stagger-4 { transition-delay: 0.4s; }
+  .stagger-5 { transition-delay: 0.5s; }
 }
 
 @layer components {

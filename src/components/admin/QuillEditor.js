@@ -23,10 +23,6 @@ const QuillEditor = ({ resume, onClose, onSave }) => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const quillRef = useRef(null);
 
-  useEffect(() => {
-    loadDocument();
-  }, [resume, loadDocument]);
-
   const loadDocument = useCallback(async () => {
     if (!resume.url) return;
 
@@ -55,6 +51,10 @@ const QuillEditor = ({ resume, onClose, onSave }) => {
       setIsLoading(false);
     }
   }, [resume.url, resume.mimeType]);
+
+  useEffect(() => {
+    loadDocument();
+  }, [resume, loadDocument]);
 
   const saveToHistory = (newContent) => {
     const newHistory = history.slice(0, historyIndex + 1);

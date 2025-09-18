@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, RotateCcw, Settings, Mail, Globe, Palette, Eye, EyeOff } from 'lucide-react';
+import { Save, RotateCcw, Settings, Palette, Eye, EyeOff, Upload, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useData } from '../../contexts/DataContext';
+import { uploadFile } from '../../utils/fileUpload';
 
 const SiteConfiguration = () => {
   const { configuration, updateConfiguration, resetConfiguration, loading } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('site');
   const [showPreview, setShowPreview] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const logoInputRef = useRef(null);
+  const iconInputRef = useRef(null);
 
   const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: configuration || {}
@@ -53,10 +58,138 @@ const SiteConfiguration = () => {
     }
   };
 
+  const handleLogoUpload = async (event) => {
+    console.log('handleLogoUpload called with event:', event);
+    const file = event.target.files[0];
+    console.log('Selected file:', file);
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (2MB limit for logo)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo file size must be less than 2MB');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const uploadResult = await uploadFile(file, '/api/upload/branding');
+      
+      if (uploadResult.success) {
+        const updatedConfig = {
+          ...configuration,
+          branding: {
+            ...configuration?.branding,
+            logo: uploadResult.data.url
+          }
+        };
+        
+        const result = await updateConfiguration(updatedConfig);
+        if (result.success) {
+          toast.success('Logo uploaded successfully!');
+          reset(updatedConfig);
+        } else {
+          toast.error(result.message || 'Failed to save logo');
+        }
+      } else {
+        toast.error(uploadResult.message || 'Failed to upload logo');
+      }
+    } catch (error) {
+      toast.error('An error occurred while uploading logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleIconUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (1MB limit for icon)
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error('Icon file size must be less than 1MB');
+      return;
+    }
+
+    setUploadingIcon(true);
+    try {
+      const uploadResult = await uploadFile(file, '/api/upload/branding');
+      
+      if (uploadResult.success) {
+        const updatedConfig = {
+          ...configuration,
+          branding: {
+            ...configuration?.branding,
+            icon: uploadResult.data.url
+          }
+        };
+        
+        const result = await updateConfiguration(updatedConfig);
+        if (result.success) {
+          toast.success('Icon uploaded successfully!');
+          reset(updatedConfig);
+        } else {
+          toast.error(result.message || 'Failed to save icon');
+        }
+      } else {
+        toast.error(uploadResult.message || 'Failed to upload icon');
+      }
+    } catch (error) {
+      toast.error('An error occurred while uploading icon');
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    const updatedConfig = {
+      ...configuration,
+      branding: {
+        ...configuration?.branding,
+        logo: ''
+      }
+    };
+    
+    const result = await updateConfiguration(updatedConfig);
+    if (result.success) {
+      toast.success('Logo removed successfully!');
+      reset(updatedConfig);
+    } else {
+      toast.error(result.message || 'Failed to remove logo');
+    }
+  };
+
+  const removeIcon = async () => {
+    const updatedConfig = {
+      ...configuration,
+      branding: {
+        ...configuration?.branding,
+        icon: ''
+      }
+    };
+    
+    const result = await updateConfiguration(updatedConfig);
+    if (result.success) {
+      toast.success('Icon removed successfully!');
+      reset(updatedConfig);
+    } else {
+      toast.error(result.message || 'Failed to remove icon');
+    }
+  };
+
   const tabs = [
     { id: 'site', name: 'Site Info', icon: Settings },
-    { id: 'contact', name: 'Contact', icon: Mail },
-    { id: 'social', name: 'Social Links', icon: Globe },
     { id: 'theme', name: 'Theme', icon: Palette },
     { id: 'settings', name: 'Settings', icon: Eye }
   ];
@@ -103,14 +236,14 @@ const SiteConfiguration = () => {
           exit={{ opacity: 0, height: 0 }}
           className="bg-gray-100 rounded-lg p-4 mb-6"
         >
-          <h3 className="text-lg font-semibold mb-3">Live Preview</h3>
+          <h3 className="text-lg font-semibold mb-3">Site Configuration Preview</h3>
           <div className="bg-white rounded-lg p-4 shadow-sm">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-900">
-                Hello, I'm <span className="text-blue-600">{watch('siteInfo.name') || 'Your Name'}</span>
+                Site Settings Preview
               </h1>
-              <p className="text-lg text-gray-600 mt-2">{watch('siteInfo.title') || 'Your Professional Title'}</p>
-              <p className="text-gray-500 mt-2">{watch('siteInfo.shortBio') || 'A brief description about yourself'}</p>
+              <p className="text-lg text-gray-600 mt-2">{watch('siteInfo.tagline') || 'Your site tagline will appear here'}</p>
+              <p className="text-gray-500 mt-2">Personal information is managed in the About section</p>
             </div>
           </div>
         </motion.div>
@@ -149,63 +282,18 @@ const SiteConfiguration = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    {...register('siteInfo.name', { required: 'Name is required' })}
-                    className="input-field"
-                    placeholder="Your Full Name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Professional Title *
-                  </label>
-                  <input
-                    {...register('siteInfo.title', { required: 'Title is required' })}
-                    className="input-field"
-                    placeholder="e.g., Software Engineer, Data Scientist"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Short Bio *
-                </label>
-                <textarea
-                  {...register('siteInfo.shortBio', { required: 'Short bio is required' })}
-                  rows={3}
-                  className="input-field"
-                  placeholder="A brief description that appears in the hero section"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Detailed Bio *
-                </label>
-                <textarea
-                  {...register('siteInfo.bio', { required: 'Bio is required' })}
-                  rows={5}
-                  className="input-field"
-                  placeholder="A detailed description about your background and experience"
-                />
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tagline
+                    Site Tagline
                   </label>
                   <input
                     {...register('siteInfo.tagline')}
                     className="input-field"
                     placeholder="e.g., Building innovative solutions"
                   />
+                  <p className="mt-1 text-sm text-gray-500">A catchy tagline for your site header</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -216,12 +304,208 @@ const SiteConfiguration = () => {
                     className="input-field"
                     placeholder="https://yoursite.com"
                   />
+                  <p className="mt-1 text-sm text-gray-500">Your main website URL</p>
+                </div>
+              </div>
+
+
+              {/* Logo and Icon Section */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4">Site Branding</h3>
+                <p className="text-sm text-gray-600 mb-4">Upload your logo and icon or provide URLs for better branding</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Logo Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Logo
+                    </label>
+                    
+                    {/* Current Logo Display */}
+                    {watch('branding.logo') && (
+                      <div className="mb-3 p-3 bg-white rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={watch('branding.logo')}
+                              alt="Current Logo"
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${watch('branding.logo') ? 'hidden' : ''}`} style={{ backgroundColor: '#3B82F6' }}>
+                              <span className="text-white font-bold text-sm">L</span>
+                            </div>
+                            <span className="text-sm text-gray-600">Current Logo</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeLogo}
+                            className="text-red-600 hover:text-red-700 p-1"
+                            title="Remove Logo"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Upload Button */}
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('Logo upload button clicked');
+                          console.log('logoInputRef.current:', logoInputRef.current);
+                          logoInputRef.current?.click();
+                        }}
+                        disabled={uploadingLogo}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {uploadingLogo ? (
+                          <>
+                            <div className="loading-spinner w-4 h-4"></div>
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span>{watch('branding.logo') ? 'Change Logo' : 'Upload Logo'}</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      
+                      <input
+                        {...register('branding.logo')}
+                        className="input-field"
+                        placeholder="Or enter logo URL directly"
+                      />
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">Upload image (max 2MB) or provide URL</p>
+                  </div>
+
+                  {/* Icon Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Icon/Favicon
+                    </label>
+                    
+                    {/* Current Icon Display */}
+                    {watch('branding.icon') && (
+                      <div className="mb-3 p-3 bg-white rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={watch('branding.icon')}
+                              alt="Current Icon"
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${watch('branding.icon') ? 'hidden' : ''}`} style={{ backgroundColor: '#3B82F6' }}>
+                              <span className="text-white font-bold text-sm">I</span>
+                            </div>
+                            <span className="text-sm text-gray-600">Current Icon</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeIcon}
+                            className="text-red-600 hover:text-red-700 p-1"
+                            title="Remove Icon"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Upload Button */}
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('Icon upload button clicked');
+                          console.log('iconInputRef.current:', iconInputRef.current);
+                          iconInputRef.current?.click();
+                        }}
+                        disabled={uploadingIcon}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {uploadingIcon ? (
+                          <>
+                            <div className="loading-spinner w-4 h-4"></div>
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span>{watch('branding.icon') ? 'Change Icon' : 'Upload Icon'}</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <input
+                        ref={iconInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleIconUpload}
+                        className="hidden"
+                      />
+                      
+                      <input
+                        {...register('branding.icon')}
+                        className="input-field"
+                        placeholder="Or enter icon URL directly"
+                      />
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">Upload image (max 1MB) or provide URL</p>
+                  </div>
+                </div>
+                
+                {/* Preview */}
+                <div className="mt-4 p-4 bg-white rounded-lg border">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Live Preview</h4>
+                  <div className="flex items-center space-x-3">
+                    {watch('branding.logo') ? (
+                      <img
+                        src={watch('branding.logo')}
+                        alt="Logo Preview"
+                        className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${watch('branding.logo') ? 'hidden' : ''}`} style={{ backgroundColor: '#3B82F6' }}>
+                      <span className="text-white font-bold text-sm">
+                        {(watch('siteInfo.name') || 'S').charAt(0)}
+                      </span>
+                    </div>
+                    <span className="text-gray-900 font-medium">
+                      {watch('siteInfo.name') || 'Your Site Name'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">This is how your logo will appear in the navbar and footer</p>
                 </div>
               </div>
 
               {/* Stats */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Statistics</h3>
+                <h3 className="text-lg font-semibold mb-4">Portfolio Statistics</h3>
+                <p className="text-sm text-gray-600 mb-4">These numbers are displayed on your portfolio homepage</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -272,116 +556,7 @@ const SiteConfiguration = () => {
             </motion.div>
           )}
 
-          {/* Contact Tab */}
-          {activeTab === 'contact' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    {...register('contactInfo.email', { required: 'Email is required' })}
-                    type="email"
-                    className="input-field"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    {...register('contactInfo.phone')}
-                    className="input-field"
-                    placeholder="+1 234 567 8900"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <input
-                    {...register('contactInfo.location')}
-                    className="input-field"
-                    placeholder="City, Country"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <input
-                    {...register('contactInfo.address')}
-                    className="input-field"
-                    placeholder="Your full address"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Social Links Tab */}
-          {activeTab === 'social' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    GitHub URL
-                  </label>
-                  <input
-                    {...register('socialLinks.github')}
-                    className="input-field"
-                    placeholder="https://github.com/yourusername"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    LinkedIn URL
-                  </label>
-                  <input
-                    {...register('socialLinks.linkedin')}
-                    className="input-field"
-                    placeholder="https://linkedin.com/in/yourusername"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Twitter URL
-                  </label>
-                  <input
-                    {...register('socialLinks.twitter')}
-                    className="input-field"
-                    placeholder="https://twitter.com/yourusername"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website URL
-                  </label>
-                  <input
-                    {...register('socialLinks.website')}
-                    className="input-field"
-                    placeholder="https://yoursite.com"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Theme Tab */}
           {activeTab === 'theme' && (

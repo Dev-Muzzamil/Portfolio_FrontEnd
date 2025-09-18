@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, RotateCw, ZoomIn, ZoomOut, Crop, Save } from 'lucide-react';
+import { X, Crop, Save } from 'lucide-react';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -8,6 +8,7 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState(null);
   const [croppedImageUrl, setCroppedImageUrl] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -65,6 +66,9 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingQuality = 'high';
 
+    // Clear the canvas first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     // Draw the cropped image
     ctx.drawImage(
       image,
@@ -78,10 +82,56 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
       cropHeight
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Check if canvas is tainted
+      try {
+        canvas.getContext('2d').getImageData(0, 0, 1, 1);
+      } catch (e) {
+        console.error('Canvas is tainted, trying alternative method:', e);
+        // If canvas is tainted, try to create a new image element
+        const newImg = new Image();
+        newImg.crossOrigin = 'anonymous';
+        newImg.onload = () => {
+          try {
+            const newCanvas = document.createElement('canvas');
+            const newCtx = newCanvas.getContext('2d');
+            newCanvas.width = cropWidth;
+            newCanvas.height = cropHeight;
+            
+            newCtx.drawImage(
+              newImg,
+              cropX,
+              cropY,
+              cropWidth,
+              cropHeight,
+              0,
+              0,
+              cropWidth,
+              cropHeight
+            );
+            
+            newCanvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Failed to create blob from canvas'));
+                return;
+              }
+              blob.name = fileName;
+              resolve(blob);
+            }, 'image/jpeg', 0.95);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        newImg.onerror = () => reject(new Error('Failed to load image for cropping'));
+        newImg.src = image.src;
+        return;
+      }
+
+      // If canvas is not tainted, proceed normally
       canvas.toBlob((blob) => {
         if (!blob) {
           console.error('Canvas is empty');
+          reject(new Error('Canvas is empty'));
           return;
         }
         blob.name = fileName;
@@ -92,13 +142,62 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
 
   const handleCrop = async () => {
     if (imgRef.current && completedCrop && completedCrop.width && completedCrop.height) {
+      setIsProcessing(true);
       try {
         const croppedImageBlob = await getCroppedImg(imgRef.current, completedCrop);
         const croppedImageUrl = URL.createObjectURL(croppedImageBlob);
         setCroppedImageUrl(croppedImageUrl);
         console.log('✅ Crop applied successfully');
+        
+        // Auto-close the editor after successful crop
+        setTimeout(() => {
+          onClose();
+        }, 500); // Small delay to show success
       } catch (error) {
         console.error('Error cropping image:', error);
+        // If cropping fails, try a simpler approach without canvas
+        try {
+          const img = imgRef.current;
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas size to crop size
+          canvas.width = completedCrop.width;
+          canvas.height = completedCrop.height;
+          
+          // Draw the cropped portion
+          ctx.drawImage(
+            img,
+            completedCrop.x,
+            completedCrop.y,
+            completedCrop.width,
+            completedCrop.height,
+            0,
+            0,
+            completedCrop.width,
+            completedCrop.height
+          );
+          
+          // Convert to blob
+          const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/jpeg', 0.95);
+          });
+          
+          if (blob) {
+            const croppedImageUrl = URL.createObjectURL(blob);
+            setCroppedImageUrl(croppedImageUrl);
+            console.log('✅ Crop applied successfully (fallback method)');
+            
+            // Auto-close the editor after successful fallback crop
+            setTimeout(() => {
+              onClose();
+            }, 500); // Small delay to show success
+          }
+        } catch (fallbackError) {
+          console.error('Fallback cropping also failed:', fallbackError);
+          alert('Unable to crop image. Please try a different image or refresh the page.');
+          setIsProcessing(false);
+        }
       }
     } else {
       console.warn('No valid crop area selected');
@@ -114,17 +213,6 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
     }
   };
 
-  const handleRotate = () => {
-    setRotation(prev => (prev + 90) % 360);
-  };
-
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.1, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.1, 0.5));
-  };
 
   return (
     <motion.div
@@ -169,6 +257,7 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
                     src={imageUrl}
                     alt="Crop me"
                     onLoad={onImageLoad}
+                    crossOrigin="anonymous"
                     style={{
                       maxWidth: '100%',
                       maxHeight: '400px',
@@ -181,33 +270,12 @@ const PhotoEditor = ({ imageUrl, onSave, onClose }) => {
               {/* Controls */}
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={handleRotate}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  <span>Rotate</span>
-                </button>
-                <button
-                  onClick={handleZoomIn}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                  <span>Zoom In</span>
-                </button>
-                <button
-                  onClick={handleZoomOut}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                  <span>Zoom Out</span>
-                </button>
-                <button
                   onClick={handleCrop}
-                  disabled={!completedCrop || !completedCrop.width || !completedCrop.height}
+                  disabled={!completedCrop || !completedCrop.width || !completedCrop.height || isProcessing}
                   className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                 >
                   <Crop className="w-4 h-4" />
-                  <span>Apply Crop</span>
+                  <span>{isProcessing ? 'Processing...' : 'Apply Crop'}</span>
                 </button>
               </div>
             </div>

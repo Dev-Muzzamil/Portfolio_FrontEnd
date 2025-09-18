@@ -22,7 +22,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle token refresh
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -30,31 +30,37 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Only handle 401 errors for non-upload requests
+    // Only handle 401 errors for token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't auto-logout during file uploads - let the component handle it
-      if (originalRequest.url?.includes('/upload') || 
-          originalRequest.url?.includes('/certificates') ||
-          originalRequest.url?.includes('/projects') ||
-          originalRequest.url?.includes('/pdf/')) {
-        return Promise.reject(error);
-      }
-      
       originalRequest._retry = true;
       
-      // Clear invalid token
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
-      delete axiosInstance.defaults.headers.common['Authorization'];
-      
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/admin/login')) {
-        window.location.href = '/admin/login';
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const response = await axios.post('/api/auth/refresh', { 
+            refreshToken: refreshToken 
+          });
+          
+          const { token } = response.data;
+          localStorage.setItem('token', token);
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          
+          // Retry the original request
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, clear tokens and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        delete axiosInstance.defaults.headers.common['Authorization'];
+        
+        if (!window.location.pathname.includes('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
       }
-      return Promise.reject(error);
     }
     
-    // For other errors, just reject
     return Promise.reject(error);
   }
 );
