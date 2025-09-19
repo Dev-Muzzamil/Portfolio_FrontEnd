@@ -1,0 +1,10 @@
+name = "portfolio-frontend"
+compatibility_date = "2025-09-19"
+
+[env.production]
+name = "portfolio-frontend"
+
+# For Cloudflare Pages deployment
+[[pages]]
+name = "portfolio-frontend"
+source = "./build"

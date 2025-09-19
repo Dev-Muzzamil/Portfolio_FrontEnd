@@ -30,7 +30,7 @@
     "build": "node build-no-lint.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "npm run build && npx wrangler pages deploy build"
+    "deploy": "node deploy.js"
   },
   "eslintConfig": {
     "extends": [
