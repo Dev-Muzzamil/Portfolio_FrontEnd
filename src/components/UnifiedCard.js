@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Github, Eye, ChevronDown, Calendar, Code, Monitor, Award, FileText, Image, Play, Star, Edit, Trash2, EyeOff } from 'lucide-react';
+import { ExternalLink, Github, Eye, ChevronDown, Code, Monitor, Award, FileText, Edit, Trash2, EyeOff } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/helpers';
 import TechnologyIcon from './TechnologyIcon';
 
@@ -18,7 +18,7 @@ const UnifiedCard = ({
   config = {}
 }) => {
   const [websitePreviews, setWebsitePreviews] = useState({});
-  const [expanded, setExpanded] = useState(false);
+  // const [expanded, setExpanded] = useState(false);
 
   // Configuration for different types and modes
   const defaultConfig = {

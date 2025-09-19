@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Upload, Download, FileText, Image, X, Star } from 'lucide-react';
+import { Download, FileText, Image, X, Star } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFormOperations } from '../../hooks/useFormOperations';
@@ -21,8 +21,8 @@ import { LoadingButton, UploadProgress, ActionLoading } from '../common/LoadingS
 import toast from 'react-hot-toast';
 
 const CertificatesManagementUnified = () => {
-  const { certificates, projects, about, createCertificate, updateCertificate, deleteCertificate, addCertificate, loading, refreshData } = useData();
-  const { resetInactivityForUpload, startUploadSession, endUploadSession } = useAuth();
+  const { certificates, projects, about, createCertificate, updateCertificate, deleteCertificate, loading, refreshData } = useData();
+  const { resetInactivityForUpload, endUploadSession } = useAuth();
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue, trigger } = useForm();
   const [showSuccess, setShowSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

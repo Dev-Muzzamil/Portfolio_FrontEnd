@@ -1,17 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Save, User, Plus, Trash2, Camera, X, Edit3, Link, ExternalLink, Code, Award, BookOpen } from 'lucide-react';
+import { Save, User, Plus, Trash2, Camera, X, Edit3, Link, Code, Award, BookOpen } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import PhotoEditor from './PhotoEditor';
 import EducationLinking from './EducationLinking';
-import FormField from '../common/FormField';
-import FormSection from '../common/FormSection';
+// import FormField from '../common/FormField';
+// import FormSection from '../common/FormSection';
 import Button from '../common/Button';
 import AnimatedSection from '../common/AnimatedSection';
-import { ValidatedInput, ValidatedTextarea } from '../common/FormValidation';
-import { LoadingButton } from '../common/LoadingStates';
+// import { ValidatedInput, ValidatedTextarea } from '../common/FormValidation';
+// import { LoadingButton } from '../common/LoadingStates';
 import { useDocumentManagement } from '../../hooks/useDocumentManagement';
 import { useFormManagement } from '../../hooks/useFormManagement';
 import { useApiManagement } from '../../hooks/useApiManagement';
@@ -30,10 +30,10 @@ const AboutManagement = () => {
   const [selectedEducationIndex, setSelectedEducationIndex] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Use new optimized hooks
-  const documentManagement = useDocumentManagement();
-  const formManagement = useFormManagement();
-  const apiManagement = useApiManagement();
+  // Use new optimized hooks (commented out for now)
+  // const documentManagement = useDocumentManagement();
+  // const formManagement = useFormManagement();
+  // const apiManagement = useApiManagement();
   const { register, handleSubmit, formState: { errors }, reset, watch, control, setValue } = useForm({
     defaultValues: about || {}
   });

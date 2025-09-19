@@ -30,10 +30,10 @@ const ResumeManagement = ({ about, onUpdate }) => {
   const [pendingFile, setPendingFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Use new optimized hooks
-  const documentManagement = useDocumentManagement();
-  const formManagement = useFormManagement();
-  const apiManagement = useApiManagement();
+  // Use new optimized hooks (commented out for now)
+  // const documentManagement = useDocumentManagement();
+  // const formManagement = useFormManagement();
+  // const apiManagement = useApiManagement();
 
   useEffect(() => {
     setResumes(about?.resumes || []);

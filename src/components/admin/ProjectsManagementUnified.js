@@ -12,13 +12,13 @@ import { processStringArray, arrayToString, getDefaultFormValues } from '../../u
 import UnifiedList from '../UnifiedList';
 import ConfirmDialog from '../common/ConfirmDialog';
 import EmptyState from '../common/EmptyState';
-import FormField from '../common/FormField';
-import FormSection from '../common/FormSection';
-import Button from '../common/Button';
-import AnimatedSection from '../common/AnimatedSection';
+// import FormField from '../common/FormField';
+// import FormSection from '../common/FormSection';
+// import Button from '../common/Button';
+// import AnimatedSection from '../common/AnimatedSection';
 import InstitutionSelector from '../common/InstitutionSelector';
 import ProjectReportsManager from './ProjectReportsManager';
-import FileUploadProgress from '../common/FileUploadProgress';
+// import FileUploadProgress from '../common/FileUploadProgress';
 import { ValidatedInput, ValidatedTextarea } from '../common/FormValidation';
 import { LoadingButton } from '../common/LoadingStates';
 import toast from 'react-hot-toast';
@@ -76,10 +76,10 @@ const ProjectsManagementUnified = () => {
   // Use modal hook for confirmation dialog
   const confirmDialog = useModal();
   
-  // Use new optimized hooks
-  const documentManagement = useDocumentManagement();
-  const formManagement = useFormManagement();
-  const apiManagement = useApiManagement();
+  // Use new optimized hooks (commented out for now)
+  // const documentManagement = useDocumentManagement();
+  // const formManagement = useFormManagement();
+  // const apiManagement = useApiManagement();
   
   const { fields: liveUrlFields, append: appendLiveUrl, remove: removeLiveUrl } = useFieldArray({
     control,
