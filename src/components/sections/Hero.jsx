@@ -253,9 +253,13 @@ const Hero = ({ data }) => {
           <div className="w-full h-full min-h-[50vh] lg:min-h-[90vh] flex items-center justify-center bg-transparent">
             {data?.backgroundImage ? (
               <img
-                src={data.backgroundImage}
+                src={data.backgroundImage.replace('/upload/', '/upload/f_auto,q_auto,w_1200/')}
                 alt={data?.name || 'Portrait'}
                 className="max-w-full max-h-full object-contain transform scale-75 rounded-xl shadow-lg"
+                fetchPriority="high"
+                width="1200"
+                height="1200"
+                loading="eager"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
