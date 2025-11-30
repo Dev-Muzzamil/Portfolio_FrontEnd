@@ -6,6 +6,9 @@ import Home from './pages/Home'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import { ThemeProvider } from './context/ThemeContext'
+import SEO from './components/SEO'
+import CursorSystem from './components/CursorSystem'
+import HeroOrbs from './components/HeroOrbs'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -23,7 +26,10 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <SEO />
+      <div className="min-h-screen bg-paper text-ink relative">
+        <CursorSystem />
+        <HeroOrbs />
         {!isAdminRoute && (
           <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
         )}

@@ -1,10 +1,4 @@
-# Allow all crawlers
 User-agent: *
 Allow: /
 
-# Disallow admin pages
-Disallow: /admin
-Disallow: /admin/*
-
-# Sitemap location
 Sitemap: https://syedmuzzamilali.me/sitemap.xml

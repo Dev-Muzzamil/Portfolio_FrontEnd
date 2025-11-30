@@ -1,174 +1,130 @@
+import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
-import TechnologyIcon from '../TechnologyIcon'
 
 const Skills = ({ data }) => {
-  const [ref, inView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  })
+    const [ref, inView] = useInView({
+        threshold: 0.1,
+        triggerOnce: true,
+    })
 
-  // Define skill categories with icons and colors using primary theme
-  const skillCategories = {
-    'Language': { name: 'Programming Languages', color: 'from-primary-600 to-primary-700', icon: '💻' },
-    'Framework / Library': { name: 'Frameworks & Libraries', color: 'from-primary-500 to-primary-600', icon: '⚡' },
-    'Database': { name: 'Databases', color: 'from-primary-700 to-primary-800', icon: '🗄️' },
-    'DevOps / Cloud': { name: 'Cloud & DevOps', color: 'from-primary-600 to-primary-700', icon: '☁️' },
-    'Tooling': { name: 'Development Tools', color: 'from-primary-500 to-primary-600', icon: '🛠️' },
-    'Testing': { name: 'Testing', color: 'from-primary-600 to-primary-700', icon: '🧪' },
-    'UI / UX': { name: 'UI / UX', color: 'from-primary-500 to-primary-600', icon: '🎨' },
-    'Technical': { name: 'Technical Skills', color: 'from-primary-600 to-primary-800', icon: '⚙️' },
-    'Other': { name: 'Other Skills', color: 'from-primary-500 to-primary-700', icon: '🔧' },
-    // Legacy categories for backward compatibility
-    'languages': { name: 'Programming Languages', color: 'from-primary-600 to-primary-700', icon: '💻' },
-    'frameworks': { name: 'Frameworks & Libraries', color: 'from-primary-500 to-primary-600', icon: '⚡' },
-    'databases': { name: 'Databases', color: 'from-primary-700 to-primary-800', icon: '🗄️' },
-    'cloud': { name: 'Cloud & DevOps', color: 'from-primary-600 to-primary-700', icon: '☁️' },
-    'ai-ml': { name: 'AI/ML Tools', color: 'from-primary-500 to-primary-600', icon: '🤖' },
-    'tools': { name: 'Development Tools', color: 'from-primary-500 to-primary-600', icon: '🛠️' },
-    'security': { name: 'Security', color: 'from-primary-700 to-primary-800', icon: '🔒' },
-    'concepts': { name: 'Concepts & Methodologies', color: 'from-primary-600 to-primary-700', icon: '📚' },
-    'data': { name: 'Data & Analytics', color: 'from-primary-600 to-primary-700', icon: '📊' },
-    'other': { name: 'Other Skills', color: 'from-primary-500 to-primary-700', icon: '🔧' }
-  }
-  
-  // Default category info for unknown categories
-  const getDefaultCategoryInfo = (category) => ({
-    name: category || 'Other Skills',
-    color: 'from-primary-500 to-primary-700',
-    icon: '📦'
-  })
+    // Group skills by category
+    const groupedSkills = useMemo(() => {
+        if (!data || !Array.isArray(data)) return {}
 
-  // Loading skeleton component
-  const SkillSkeleton = () => (
-    <div className="animate-pulse">
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div key={index} className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-              <div className="flex-1">
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+        const groups = {}
+        data.forEach(skill => {
+            const category = skill.category || 'Other'
+            if (!groups[category]) {
+                groups[category] = []
+            }
+            groups[category].push(skill)
+        })
 
-  if (!data || data.length === 0) {
-    return (
-      <section ref={ref} className="section-padding bg-gray-50 dark:bg-gray-800">
-        <div className="container-max">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              My <span className="text-primary-600 dark:text-primary-400">Skills</span>
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
-              Technologies and tools I work with to bring ideas to life
-            </p>
-            <SkillSkeleton />
-          </motion.div>
-        </div>
-      </section>
-    )
-  }
+        return groups
+    }, [data])
 
-  // Group skills by category
-  const skillsByCategory = data.reduce((acc, skill) => {
-    if (!acc[skill.category]) {
-      acc[skill.category] = []
+    const categories = Object.keys(groupedSkills).sort((a, b) => {
+        // Optional: Sort by number of skills to help packing?
+        // Or just keep alphabetical. Let's keep alphabetical for now.
+        return a.localeCompare(b)
+    })
+
+    if (!data || data.length === 0) return null
+
+    // Helper to determine grid span based on item count
+    const getGridSpan = (count) => {
+        if (count > 10) return "sm:col-span-2 lg:col-span-2 row-span-2"
+        if (count > 5) return "sm:col-span-2 lg:col-span-2 lg:row-span-1"
+        return "col-span-1"
     }
-    acc[skill.category].push(skill)
-    return acc
-  }, {})
 
-  return (
-    <section ref={ref} className="section-padding bg-gray-50 dark:bg-gray-800">
-      <div className="container-max">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            My <span className="text-primary-600 dark:text-primary-400">Skills</span>
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Technologies and tools I work with to bring ideas to life
-          </p>
-        </motion.div>
+    return (
+        <section id="skills" ref={ref} className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative transition-colors duration-300">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={inView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.8 }}
+                    className="text-center mb-10 sm:mb-16 md:mb-24"
+                >
+                    <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-7xl text-ink dark:text-ink-dark mb-4 sm:mb-6">
+                        My <span className="text-accent dark:text-accent-dark">Skills.</span>
+                    </h2>
+                    <p className="font-sans text-ink/60 dark:text-ink-dark/60 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-2">
+                        The tools and technologies I use to build.
+                    </p>
+                </motion.div>
 
-        <div className="space-y-8">
-          {Object.entries(skillsByCategory).map(([category, categorySkills]) => {
-            const categoryInfo = skillCategories[category] || getDefaultCategoryInfo(category)
+                {/* Bento Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 auto-rows-min">
+                    {categories.map((category, catIndex) => {
+                        const skills = groupedSkills[category]
+                        const spanClass = getGridSpan(skills.length)
 
-            return (
-              <motion.div
-                key={category}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${categoryInfo.color} rounded-xl flex items-center justify-center text-white text-xl shadow-lg dark:shadow-primary-900/50`}>
-                    {categoryInfo.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {categoryInfo.name}
-                    </h3>
-                    <div className="w-16 h-1 bg-gradient-to-r from-primary-300 to-primary-400 dark:from-primary-700 dark:to-primary-800 rounded-full mt-2" />
-                  </div>
+                        return (
+                            <motion.div
+                                key={category}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                                transition={{ duration: 0.5, delay: catIndex * 0.05 }}
+                                className={`
+                                    group relative overflow-hidden
+                                    bg-gradient-to-br from-white/40 to-white/10 dark:from-white/10 dark:to-white/5
+                                    backdrop-blur-xl border border-white/40 dark:border-white/10
+                                    rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 transition-all duration-500
+                                    shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]
+                                    hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] dark:hover:shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]
+                                    hover:-translate-y-1 hover:border-white/60 dark:hover:border-white/20
+                                    flex flex-col
+                                    ${spanClass}
+                                `}
+                            >
+                                {/* Decorative gradient blob */}
+                                <div className="absolute -top-10 -right-10 w-24 sm:w-32 h-24 sm:h-32 bg-accent/10 dark:bg-accent-dark/10 rounded-full blur-3xl group-hover:bg-accent/20 dark:group-hover:bg-accent-dark/20 transition-colors duration-500" />
+                                <div className="absolute -bottom-10 -left-10 w-20 sm:w-24 h-20 sm:h-24 bg-ink/5 dark:bg-white/5 rounded-full blur-2xl group-hover:bg-ink/10 dark:group-hover:bg-white/10 transition-colors duration-500" />
+
+                                <h3 className="font-serif text-lg sm:text-xl lg:text-2xl text-ink dark:text-ink-dark mb-3 sm:mb-4 lg:mb-6 relative z-10 flex items-center gap-2 sm:gap-3 flex-wrap">
+                                    <span className="break-words">{category}</span>
+                                    <span className="text-[10px] sm:text-xs font-sans font-bold text-ink/40 dark:text-ink-dark/40 bg-white/30 dark:bg-white/10 border border-white/40 dark:border-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
+                                        {skills.length}
+                                    </span>
+                                </h3>
+
+                                <div className="flex flex-wrap gap-1.5 sm:gap-2 relative z-10 content-start">
+                                    {skills.map((skill, skillIndex) => (
+                                        <motion.div
+                                            key={skill._id || skill.name || skillIndex}
+                                            whileHover={{ scale: 1.05 }}
+                                            className="
+                                                flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 
+                                                bg-white/30 dark:bg-white/10 backdrop-blur-sm border border-white/40 dark:border-white/10 rounded-lg sm:rounded-xl 
+                                                shadow-sm hover:shadow-md hover:bg-white/50 dark:hover:bg-white/20 hover:border-white/60 dark:hover:border-white/20
+                                                transition-all duration-300 cursor-default
+                                            "
+                                        >
+                                            {skill.icon && (
+                                                <img
+                                                    src={skill.icon}
+                                                    alt=""
+                                                    className="w-3 h-3 sm:w-4 sm:h-4 object-contain dark:brightness-110"
+                                                    onError={(e) => { e.target.style.display = 'none' }}
+                                                />
+                                            )}
+                                            <span className="font-sans text-[10px] sm:text-xs font-medium text-ink/80 dark:text-ink-dark/80">
+                                                {skill.name}
+                                            </span>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )
+                    })}
                 </div>
-
-                <div className="flex flex-wrap gap-3">
-                  {categorySkills.map((skill, index) => (
-                    <motion.div
-                      key={skill._id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={inView ? { opacity: 1, scale: 1 } : {}}
-                      transition={{ duration: 0.3, delay: index * 0.02 }}
-                      className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm hover:border-primary-400 dark:hover:border-primary-600 h-[72px]"
-                    >
-                      {/* Gradient overlay for hover effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 via-transparent to-primary-100/30 dark:from-primary-900/20 dark:via-transparent dark:to-primary-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                      <div className="relative z-10 flex items-center space-x-3 p-3 h-full">
-                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-all duration-300 shadow-sm">
-                          <TechnologyIcon technology={skill.name} className="w-6 h-6" />
-                        </div>
-
-                        <div className="flex flex-col justify-center min-w-0 flex-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300 text-sm leading-tight whitespace-nowrap">
-                            {skill.name}
-                          </h4>
-                          {skill.proficiency && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-                              {skill.proficiency}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-  )
+            </div>
+        </section>
+    )
 }
 
 export default Skills

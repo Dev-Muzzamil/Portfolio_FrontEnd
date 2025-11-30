@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { api, authApi } from '../services/api'
+import { api } from '../services/api'
 
 const AdminLogin = ({ setIsAuthenticated }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -31,127 +31,117 @@ const AdminLogin = ({ setIsAuthenticated }) => {
     }
   }
 
-  // Redirect if already authenticated
   if (localStorage.getItem('token')) {
     return <Navigate to="/admin" replace />
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-paper py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-ink/5 rounded-full blur-3xl"></div>
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="max-w-md w-full space-y-8"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-md w-full space-y-8 relative z-10"
       >
-        <div>
-          <div className="mx-auto h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
-            <Lock className="h-6 w-6 text-white" />
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 bg-ink text-paper rounded-full flex items-center justify-center mb-6 shadow-xl">
+            <Lock className="h-8 w-8" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Admin Login
+          <h2 className="font-serif text-4xl md:text-5xl text-ink mb-2">
+            Admin Access
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Sign in to access the admin panel
+          <p className="font-sans text-sm text-ink/60 tracking-wide">
+            Enter your credentials to continue
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^\S+@\S+$/i,
-                    message: 'Invalid email address'
-                  }
-                })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="admin@example.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <div className="mt-1 relative">
+        <div className="bg-white/50 backdrop-blur-md border border-white/40 rounded-soft p-8 shadow-card">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block font-sans text-xs font-bold uppercase tracking-widest text-gray mb-2">
+                  Email address
+                </label>
                 <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  id="email"
+                  type="email"
+                  autoComplete="email"
                   required
-                  {...register('password', { required: 'Password is required' })}
-                  className="block w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Enter your password"
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: 'Invalid email address'
+                    }
+                  })}
+                  className="block w-full px-4 py-3 bg-paper/50 border border-ink/10 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent text-ink placeholder-ink/30 transition-all outline-none"
+                  placeholder="admin@example.com"
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+              <div>
+                <label htmlFor="password" className="block font-sans text-xs font-bold uppercase tracking-widest text-gray mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    {...register('password', { required: 'Password is required' })}
+                    className="block w-full px-4 py-3 bg-paper/50 border border-ink/10 rounded-lg focus:ring-2 focus:ring-accent/50 focus:border-accent text-ink placeholder-ink/30 transition-all outline-none pr-10"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink/40 hover:text-ink transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
-              ) : (
-                'Sign in'
-              )}
-            </button>
-          </div>
+                {errors.password && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+            </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
+            <div>
               <button
-                type="button"
-                className="font-medium text-primary-600 hover:text-primary-500"
-                onClick={() => {
-                  // This would typically redirect to a registration page
-                  // For now, we'll just show a message
-                  toast.info('Please contact the administrator to create an account')
-                }}
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-4 px-4 border border-transparent font-sans text-xs font-bold uppercase tracking-widest rounded-full text-paper bg-ink hover:bg-accent hover:text-paper focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Contact Admin
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-paper mr-2"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  'Sign in'
+                )}
               </button>
-            </p>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </motion.div>
     </div>
   )

@@ -41,26 +41,26 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-// Fetch site settings on startup and update document title/favicon
-;(async function applySiteSettings() {
-  try {
-    const res = await publicApi.get('/settings')
-    const settings = res?.data?.settings
-    if (settings && settings.site) {
-    // Expose to global so components can consume without a full context for now
-    window.__SITE_SETTINGS__ = settings
-    try { window.dispatchEvent(new CustomEvent('site-settings-updated', { detail: settings })) } catch (e) {}
-      if (settings.site.title) document.title = `${settings.site.title}`
-      if (settings.site.faviconUrl) {
-        const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
-        link.type = 'image/png'
-        link.rel = 'icon'
-        link.href = settings.site.faviconUrl
-        document.getElementsByTagName('head')[0].appendChild(link)
+  // Fetch site settings on startup and update document title/favicon
+  ; (async function applySiteSettings() {
+    try {
+      const res = await publicApi.get('/settings')
+      const settings = res?.data?.settings
+      if (settings && settings.site) {
+        // Expose to global so components can consume without a full context for now
+        window.__SITE_SETTINGS__ = settings
+        try { window.dispatchEvent(new CustomEvent('site-settings-updated', { detail: settings })) } catch (e) { /* ignore */ }
+        if (settings.site.title) document.title = `${settings.site.title}`
+        if (settings.site.faviconUrl) {
+          const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
+          link.type = 'image/png'
+          link.rel = 'icon'
+          link.href = settings.site.faviconUrl
+          document.getElementsByTagName('head')[0].appendChild(link)
+        }
+        // If logo is used in navbar or header, components subscribe to API or read settings elsewhere.
       }
-      // If logo is used in navbar or header, components subscribe to API or read settings elsewhere.
+    } catch (err) {
+      console.debug('Failed to apply site settings:', err && err.message)
     }
-  } catch (err) {
-    console.debug('Failed to apply site settings:', err && err.message)
-  }
-})()
+  })()
