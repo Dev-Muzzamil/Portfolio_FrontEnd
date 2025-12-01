@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Download, ChevronDown, Github, Linkedin, Globe, Mail, Phone, MapPin, Instagram, Youtube, Facebook, ArrowRight } from 'lucide-react'
+import { Download, ChevronDown, Github, Linkedin, Globe, Mail, Phone, MapPin, Instagram, Youtube, Facebook, ArrowRight, ArrowUpRight } from 'lucide-react'
 import { normalizeSocial } from '../../utils/social'
 import HeroMarquee from '../HeroMarquee'
 import Reveal from '../Reveal'
@@ -25,15 +25,37 @@ const Hero = ({ data }) => {
     }
 
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 bg-paper dark:bg-paper-dark transition-colors duration-300">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 transition-colors duration-300">
+            {/* Warm Gradient Background */}
+            <div className="absolute inset-0 -z-20">
+                <div className="absolute inset-0 bg-paper dark:bg-paper-dark" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#E6C2A3]/30 via-paper to-paper dark:from-[#3D3530]/50 dark:via-paper-dark dark:to-paper-dark" />
+                <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-[#D4A373]/20 to-transparent dark:from-[#E7A765]/10" />
+                <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-[#C5D1D6]/10 to-transparent dark:from-[#2A2825]/20" />
+            </div>
             <HeroMarquee text={`${data?.role || 'CREATIVE DEVELOPER'} • ${data?.name || 'PORTFOLIO'} • `} />
 
             {/* Content Container */}
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+                {/* Mobile Header & Name (visible only on mobile, above image) */}
+                <div className="lg:hidden text-center mb-6 sm:mb-8">
+                    <Reveal delay={0.2}>
+                        <h2 className="text-xs sm:text-sm font-sans font-bold tracking-widest text-accent dark:text-accent-dark uppercase mb-2 sm:mb-4">
+                            {data?.role || 'Full Stack Developer'}
+                        </h2>
+                    </Reveal>
+
+                    <Reveal delay={0.4}>
+                        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl leading-[0.85] text-ink dark:text-ink-dark tracking-tight">
+                            {data?.name || 'Your Name'}
+                        </h1>
+                    </Reveal>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-20 items-center">
 
-                    {/* Left Column: Text Content (7 cols) */}
-                    <div className="lg:col-span-7 space-y-6 sm:space-y-8 lg:space-y-10 text-center lg:text-left order-2 lg:order-1">
+                    {/* Left Column: Text Content (7 cols) - Desktop Only */}
+                    <div className="hidden lg:block lg:col-span-7 space-y-6 sm:space-y-8 lg:space-y-10 text-center lg:text-left order-3 lg:order-1">
                         <div className="space-y-4 sm:space-y-6">
                             <Reveal delay={0.2}>
                                 <h2 className="text-xs sm:text-sm font-sans font-bold tracking-widest text-accent dark:text-accent-dark uppercase mb-2 sm:mb-4">
@@ -58,39 +80,64 @@ const Hero = ({ data }) => {
 
                         {/* Action Buttons */}
                         <Reveal delay={0.8}>
-                            <div className="flex flex-wrap gap-4 sm:gap-6 justify-center lg:justify-start pt-2 sm:pt-4">
+                            <motion.div 
+                                className="flex flex-wrap gap-4 sm:gap-6 justify-center lg:justify-start pt-2 sm:pt-4"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8, duration: 0.6 }}
+                            >
                                 <button
                                     onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
-                                    className="px-6 sm:px-8 py-3 sm:py-4 bg-transparent border border-ink/20 dark:border-ink-dark/20 text-ink dark:text-ink-dark rounded-full font-sans text-xs sm:text-sm uppercase tracking-widest hover:bg-ink hover:text-paper dark:hover:bg-ink-dark dark:hover:text-paper-dark transition-all duration-300 inline-flex items-center gap-2"
+                                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-ink dark:bg-ink-dark text-paper dark:text-paper-dark rounded-full font-sans text-xs sm:text-sm font-bold uppercase tracking-widest hover:bg-accent dark:hover:bg-accent-dark transition-colors duration-300"
                                 >
                                     <span>View Work</span>
-                                    <ArrowRight className="w-4 h-4" />
+                                    <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 </button>
-                            </div>
+                            </motion.div>
                         </Reveal>
 
                         {/* Minimal Social Links */}
                         <Reveal delay={1.0}>
                             {(() => {
-                                const entries = [['github', Github], ['linkedin', Linkedin], ['x', XIcon], ['instagram', Instagram]]
-                                    .filter(([key]) => social[key])
+                                const entries = [
+                                    ['github', Github], 
+                                    ['linkedin', Linkedin], 
+                                    ['x', XIcon], 
+                                    ['instagram', Instagram],
+                                    ['facebook', Facebook],
+                                    ['youtube', Youtube],
+                                    ['email', Mail],
+                                    ['phone', Phone]
+                                ]
+                                    .filter(([key]) => {
+                                        if (key === 'email') return contact.email
+                                        if (key === 'phone') return contact.phone
+                                        return social[key]
+                                    })
 
                                 if (entries.length === 0) return null
 
                                 return (
-                                    <div className="flex gap-6 sm:gap-8 justify-center lg:justify-start pt-4 sm:pt-8">
-                                        {entries.map(([key, Icon]) => (
-                                            <a
-                                                key={key}
-                                                href={social[key]}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-ink/40 dark:text-ink-dark/40 hover:text-accent dark:hover:text-accent-dark transition-colors duration-300 transform hover:scale-110"
-                                                aria-label={key}
-                                            >
-                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                                            </a>
-                                        ))}
+                                    <div className="flex gap-4 sm:gap-6 justify-center lg:justify-start pt-4 sm:pt-8 flex-wrap">
+                                        {entries.map(([key, Icon]) => {
+                                            const href = 
+                                                key === 'email' ? `mailto:${contact.email}` :
+                                                key === 'phone' ? `tel:${contact.phone}` :
+                                                social[key]
+                                            
+                                            return (
+                                                <a
+                                                    key={key}
+                                                    href={href}
+                                                    target={key === 'email' || key === 'phone' ? undefined : '_blank'}
+                                                    rel={key === 'email' || key === 'phone' ? undefined : 'noopener noreferrer'}
+                                                    className="text-ink/40 dark:text-ink-dark/40 hover:text-accent dark:hover:text-accent-dark transition-colors duration-300 transform hover:scale-110"
+                                                    aria-label={key}
+                                                >
+                                                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                                </a>
+                                            )
+                                        })}
                                     </div>
                                 )
                             })()}
@@ -98,7 +145,7 @@ const Hero = ({ data }) => {
                     </div>
 
                     {/* Right Column: Image (5 cols) */}
-                    <div className="lg:col-span-5 relative flex justify-center lg:justify-end order-1 lg:order-2">
+                    <div className="lg:col-span-5 relative flex justify-center lg:justify-end order-2 lg:order-2">
                         <Reveal delay={0.4} width="100%">
                             <div className="relative w-full max-w-[280px] sm:max-w-[350px] lg:max-w-[400px] aspect-[3/4] rounded-arch overflow-hidden bg-paper dark:bg-paper-dark border border-ink/10 dark:border-ink-dark/10 grayscale hover:grayscale-0 transition-all duration-1000 ease-out shadow-2xl dark:shadow-strong-dark hover:rotate-0 hover:shadow-3xl group mx-auto">
                                 {data?.backgroundImage ? (
@@ -117,7 +164,7 @@ const Hero = ({ data }) => {
 
                                 {/* Glass Overlay Card */}
                                 {(contact.location || contact.email) && (
-                                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 lg:bottom-8 lg:left-8 lg:right-8 p-4 sm:p-5 lg:p-6 bg-paper/80 dark:bg-paper-dark/90 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/30 dark:border-white/10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-4 group-hover:translate-y-0">
+                                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 lg:bottom-8 lg:left-8 lg:right-8 p-4 sm:p-5 lg:p-6 bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                                         <div className="flex flex-col gap-2 sm:gap-3">
                                             {contact.location && (
                                                 <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-sans font-medium text-ink dark:text-ink-dark">
@@ -137,6 +184,82 @@ const Hero = ({ data }) => {
                             </div>
                         </Reveal>
                     </div>
+                </div>
+
+                {/* Mobile Content (tagline, button, socials - visible only on mobile, below image) */}
+                <div className="lg:hidden text-center mt-8 sm:mt-10 space-y-6 sm:space-y-8">
+                    <Reveal delay={0.6}>
+                        <div className="max-w-xl mx-auto">
+                            <p className="font-sans text-base sm:text-lg text-ink/70 dark:text-ink-dark/70 leading-relaxed font-light px-2 sm:px-0">
+                                {data?.tagline || 'Building digital experiences with focus on simplicity and performance.'}
+                            </p>
+                        </div>
+                    </Reveal>
+
+                    {/* Action Buttons */}
+                    <Reveal delay={0.8}>
+                        <motion.div 
+                            className="flex flex-wrap gap-4 sm:gap-6 justify-center pt-2 sm:pt-4"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8, duration: 0.6 }}
+                        >
+                            <button
+                                onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-ink dark:bg-ink-dark text-paper dark:text-paper-dark rounded-full font-sans text-xs sm:text-sm font-bold uppercase tracking-widest hover:bg-accent dark:hover:bg-accent-dark transition-colors duration-300"
+                            >
+                                <span>View Work</span>
+                                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
+                        </motion.div>
+                    </Reveal>
+
+                    {/* Minimal Social Links */}
+                    <Reveal delay={1.0}>
+                        {(() => {
+                            const entries = [
+                                ['github', Github], 
+                                ['linkedin', Linkedin], 
+                                ['x', XIcon], 
+                                ['instagram', Instagram],
+                                ['facebook', Facebook],
+                                ['youtube', Youtube],
+                                ['email', Mail],
+                                ['phone', Phone]
+                            ]
+                                .filter(([key]) => {
+                                    if (key === 'email') return contact.email
+                                    if (key === 'phone') return contact.phone
+                                    return social[key]
+                                })
+
+                            if (entries.length === 0) return null
+
+                            return (
+                                <div className="flex gap-4 sm:gap-6 justify-center pt-4 sm:pt-8 flex-wrap">
+                                    {entries.map(([key, Icon]) => {
+                                        const href = 
+                                            key === 'email' ? `mailto:${contact.email}` :
+                                            key === 'phone' ? `tel:${contact.phone}` :
+                                            social[key]
+                                        
+                                        return (
+                                            <a
+                                                key={key}
+                                                href={href}
+                                                target={key === 'email' || key === 'phone' ? undefined : '_blank'}
+                                                rel={key === 'email' || key === 'phone' ? undefined : 'noopener noreferrer'}
+                                                className="text-ink/40 dark:text-ink-dark/40 hover:text-accent dark:hover:text-accent-dark transition-colors duration-300 transform hover:scale-110"
+                                                aria-label={key}
+                                            >
+                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                            </a>
+                                        )
+                                    })}
+                                </div>
+                            )
+                        })()}
+                    </Reveal>
                 </div>
             </div>
 

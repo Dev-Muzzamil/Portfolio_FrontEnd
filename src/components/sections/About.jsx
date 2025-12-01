@@ -17,11 +17,16 @@ const About = ({ data }) => {
   }
 
   return (
-    <section id="about" className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative overflow-hidden transition-colors duration-300">
+    <section id="about" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
       <SEO
         title="About Me"
         description={safeData.summary || "Learn more about Syed Muzzamil Ali, a Full Stack Developer."}
       />
+      {/* Warm Gradient Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#E6C2A3]/20 via-paper to-paper dark:from-[#3D3530]/40 dark:via-paper-dark dark:to-paper-dark" />
+        <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+      </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* New Centered Heading Block */}

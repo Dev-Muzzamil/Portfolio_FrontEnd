@@ -78,15 +78,15 @@ const Contact = ({ data }) => {
     }
 
     return (
-        <section id="contact" ref={ref} className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative overflow-hidden transition-colors duration-300">
+        <section id="contact" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
             <SEO
-                title="Contact Me"
                 description="Get in touch with Syed Muzzamil Ali for project inquiries or collaboration."
             />
-            {/* Ambient Background Orbs */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                <div className="absolute top-[20%] right-[-10%] w-[300px] sm:w-[400px] lg:w-[600px] h-[300px] sm:h-[400px] lg:h-[600px] bg-accent/5 dark:bg-accent-dark/5 rounded-full blur-[80px] sm:blur-[100px] lg:blur-[120px]" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[300px] sm:w-[400px] lg:w-[600px] h-[300px] sm:h-[400px] lg:h-[600px] bg-ink/5 dark:bg-ink-dark/5 rounded-full blur-[80px] sm:blur-[100px] lg:blur-[120px]" />
+            {/* Warm Gradient Background */}
+            <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/25 via-paper to-paper dark:from-[#3D3530]/50 dark:via-paper-dark dark:to-paper-dark" />
+                <div className="absolute bottom-0 left-0 w-2/3 h-2/3 bg-gradient-to-tr from-[#D4A373]/15 to-transparent dark:from-[#E7A765]/10" />
+                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[#C5D1D6]/10 to-transparent dark:from-[#2A2825]/15" />
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,10 +97,10 @@ const Contact = ({ data }) => {
                     className="text-center mb-10 sm:mb-16 md:mb-24"
                 >
                     <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-7xl text-ink dark:text-ink-dark mb-4 sm:mb-6">
-                        Get in <span className="text-accent dark:text-accent-dark">Touch.</span>
+                        Let&apos;s Build <span className="text-accent dark:text-accent-dark">Tomorrow.</span>
                     </h2>
                     <p className="font-sans text-ink/60 dark:text-ink-dark/60 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-2">
-                        Let&apos;s build something amazing together.
+                        Open for collaborations in AI, Full Stack, and Data Science.
                     </p>
                 </motion.div>
 
@@ -110,12 +110,15 @@ const Contact = ({ data }) => {
                         initial={{ opacity: 0, x: -30 }}
                         animate={inView ? { opacity: 1, x: 0 } : {}}
                         transition={{ duration: 0.8, delay: 0.2 }}
+                        className="order-1 lg:order-1"
                     >
+                        {/* Paragraph - visible on all screens */}
                         <p className="font-serif text-lg sm:text-xl lg:text-2xl text-ink/80 dark:text-ink-dark/80 leading-relaxed mb-8 sm:mb-10 lg:mb-12">
                             I&apos;m always open to discussing new projects, creative ideas or opportunities to be part of your visions.
                         </p>
 
-                        <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+                        {/* Contact Details - hidden on mobile, visible on lg+ */}
+                        <div className="hidden lg:block space-y-5 sm:space-y-6 lg:space-y-8">
                             <div className="flex items-start gap-4 sm:gap-5 lg:gap-6 group">
                                 <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                     <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
@@ -153,8 +156,8 @@ const Contact = ({ data }) => {
                             </div>
                         </div>
 
-                        {/* Socials */}
-                        <div className="mt-10 sm:mt-12 lg:mt-16 pt-6 sm:pt-8 border-t border-ink/10 dark:border-ink-dark/10">
+                        {/* Socials - hidden on mobile, visible on lg+ */}
+                        <div className="hidden lg:block mt-10 sm:mt-12 lg:mt-16 pt-6 sm:pt-8 border-t border-ink/10 dark:border-ink-dark/10">
                             <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-4 sm:mb-6">Follow Me</p>
                             <div className="flex flex-wrap gap-3 sm:gap-4">
                                 {(() => {
@@ -220,6 +223,7 @@ const Contact = ({ data }) => {
                         initial={{ opacity: 0, x: 30 }}
                         animate={inView ? { opacity: 1, x: 0 } : {}}
                         transition={{ duration: 0.8, delay: 0.4 }}
+                        className="order-2 lg:order-2"
                     >
                         <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 md:p-8 lg:p-12 border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark">
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6 lg:space-y-8">
@@ -297,6 +301,109 @@ const Contact = ({ data }) => {
                             </form>
                         </div>
                     </motion.div>
+                </div>
+
+                {/* Mobile Contact Details & Socials (below form on mobile) */}
+                <div className="lg:hidden mt-12 sm:mt-16 space-y-10 sm:space-y-12">
+                    {/* Contact Details */}
+                    <div className="space-y-5 sm:space-y-6">
+                        <div className="flex items-start gap-4 sm:gap-5 group">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-1">Email</p>
+                                <a href={`mailto:${data?.email}`} className="font-serif text-base sm:text-lg text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors break-all">
+                                    {data?.email || 'hello@example.com'}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 sm:gap-5 group">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-1">Phone</p>
+                                <a href={`tel:${data?.phone}`} className="font-serif text-base sm:text-lg text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors">
+                                    {data?.phone || '+1 (555) 000-0000'}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 sm:gap-5 group">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-1">Location</p>
+                                <p className="font-serif text-base sm:text-lg text-ink dark:text-ink-dark">
+                                    {data?.address || data?.location || 'Remote'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Socials */}
+                    <div className="pt-6 sm:pt-8 border-t border-ink/10 dark:border-ink-dark/10">
+                        <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-4 sm:mb-6">Follow Me</p>
+                        <div className="flex flex-wrap gap-3 sm:gap-4">
+                            {(() => {
+                                const links = normalizeSocial(data?.socialLinks || data?.social)
+                                const customLinks = data?.social?.customLinks || []
+                                const activeSocialLinks = Object.entries(links).filter(([key, value]) => {
+                                    if (data?.socialLinks && Array.isArray(data.socialLinks)) {
+                                        const linkData = data.socialLinks.find(l => l.platform === key)
+                                        return linkData && linkData.isActive !== false && value
+                                    }
+                                    return value
+                                })
+
+                                return (
+                                    <>
+                                        {[
+                                            ['github', Github],
+                                            ['linkedin', Linkedin],
+                                            ['x', XIcon],
+                                            ['website', Globe],
+                                            ['instagram', Instagram],
+                                            ['youtube', Youtube],
+                                            ['facebook', Facebook]
+                                        ].filter(([key]) => activeSocialLinks.some(([k]) => k === key)).map(([key, Icon]) => {
+                                            const url = links[key]
+                                            return (
+                                                <a
+                                                    key={key}
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                    aria-label={key}
+                                                >
+                                                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                </a>
+                                            )
+                                        })}
+                                        {customLinks.map((link, index) => (
+                                            link.url && (
+                                                <a
+                                                    key={`custom-${index}`}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                    aria-label={link.label}
+                                                    title={link.label}
+                                                >
+                                                    <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                </a>
+                                            )
+                                        ))}
+                                    </>
+                                )
+                            })()}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

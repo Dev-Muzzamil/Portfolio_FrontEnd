@@ -23,7 +23,12 @@ const Certifications = ({ data }) => {
   if (!data || data.length === 0) return null
 
   return (
-    <section id="certifications" ref={ref} className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative overflow-hidden transition-colors duration-300">
+    <section id="certifications" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+      {/* Warm Gradient Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/15 via-paper to-paper dark:from-[#3D3530]/30 dark:via-paper-dark dark:to-paper-dark" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+      </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -63,7 +63,11 @@ const Education = ({ data }) => {
     })
 
     return (
-        <div className="h-full" ref={ref}>
+        <div className="h-full relative" ref={ref}>
+            {/* Warm Gradient Background */}
+            <div className="absolute inset-0 -z-10 rounded-3xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-bl from-[#E6C2A3]/10 to-transparent dark:from-[#3D3530]/20" />
+            </div>
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
                 <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-ink dark:text-ink-dark mb-2 sm:mb-3 lg:mb-4">
                     Academic <span className="text-accent dark:text-accent-dark">Journey.</span>
@@ -102,7 +106,7 @@ const Education = ({ data }) => {
                             <span className="absolute -left-[5px] top-4 sm:top-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent dark:bg-accent-dark ring-2 sm:ring-4 ring-paper dark:ring-paper-dark group-hover:scale-150 transition-transform duration-300" />
 
                             {/* Ultra Compact Glassmorphism Education Card */}
-                            <div className="p-3 sm:p-4 lg:p-5 rounded-lg sm:rounded-xl bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/60 dark:border-white/10 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.02)] dark:shadow-soft-dark hover:shadow-md dark:hover:shadow-medium-dark transition-all hover:bg-white/60 dark:hover:bg-white/10">
+                            <div className="p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30">
 
                                 {/* Year Range */}
                                 {period && (

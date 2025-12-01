@@ -168,7 +168,7 @@ const UnifiedCard = ({
                     rotateY,
                     transformStyle: "preserve-3d"
                 }}
-                className={`bg-paper dark:bg-surface-dark rounded-soft border border-ink/10 dark:border-ink-dark/10 hover:border-accent dark:hover:border-accent-dark transition-colors duration-500 overflow-hidden flex flex-col shadow-sm dark:shadow-soft-dark hover:shadow-2xl dark:hover:shadow-strong-dark h-full relative`}
+                className={`bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-white/10 hover:border-accent dark:hover:border-accent-dark transition-all duration-500 overflow-hidden flex flex-col shadow-xl dark:shadow-strong-dark hover:shadow-2xl dark:hover:shadow-2xl h-full relative`}
             >
                 {/* Image Section */}
                 <div className={`relative overflow-hidden border-b border-ink/5 dark:border-ink-dark/5 ${currentConfig.imageHeight} flex-shrink-0 bg-gray/5 dark:bg-white/5 transform-style-3d`}>

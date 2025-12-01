@@ -14,6 +14,7 @@ const Certifications = lazy(() => import('../components/sections/Certifications'
 const Contact = lazy(() => import('../components/sections/Contact'))
 const Education = lazy(() => import('../components/sections/Education'))
 const Experience = lazy(() => import('../components/sections/Experience'))
+const GithubSection = lazy(() => import('../components/GithubSection'))
 
 const Home = () => {
     const [portfolioData, setPortfolioData] = useState({
@@ -131,7 +132,11 @@ const Home = () => {
 
             {/* Experience & Education Section */}
             {(portfolioData.experience?.length > 0 || portfolioData.education?.length > 0) && (
-                <section id="experience-education" className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative transition-colors duration-300">
+                <section id="experience-education" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+                    {/* Warm Gradient Background */}
+                    <div className="absolute inset-0 -z-10">
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#E6C2A3]/15 via-paper to-[#C5D1D6]/10 dark:from-[#3D3530]/30 dark:via-paper-dark dark:to-[#2A2825]/20" />
+                    </div>
                     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20">
                             {/* Experience Column */}
@@ -169,6 +174,13 @@ const Home = () => {
             <section id="skills">
                 <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
                     <Skills data={portfolioData.skills} />
+                </Suspense>
+            </section>
+
+            {/* GitHub Section */}
+            <section id="github">
+                <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                    <GithubSection about={portfolioData.about} />
                 </Suspense>
             </section>
 

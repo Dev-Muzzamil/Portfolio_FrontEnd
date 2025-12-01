@@ -112,11 +112,16 @@ const Projects = ({ data, skills = [] }) => {
   if (!data || data.length === 0) return null
 
   return (
-    <section id="projects" ref={ref} className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative transition-colors duration-300">
+    <section id="projects" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
       <SEO
         title="Projects"
         description="Explore my portfolio of projects ranging from web development to AI/ML."
       />
+      {/* Warm Gradient Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/15 via-paper to-paper dark:from-[#3D3530]/30 dark:via-paper-dark dark:to-paper-dark" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+      </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -126,7 +131,7 @@ const Projects = ({ data, skills = [] }) => {
           className="text-center mb-10 sm:mb-16 md:mb-24"
         >
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-7xl text-ink dark:text-ink-dark mb-4 sm:mb-6">
-            Selected <span className="text-accent dark:text-accent-dark">Work.</span>
+            My <span className="text-accent dark:text-accent-dark">Works.</span>
           </h2>
           <p className="font-sans text-ink/60 dark:text-ink-dark/60 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-2">
             Where engineering meets human-centric design.

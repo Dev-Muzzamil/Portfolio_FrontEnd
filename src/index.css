@@ -188,6 +188,40 @@
     border: 1px solid var(--border-subtle);
     box-shadow: 0 4px 20px var(--shadow-color);
   }
+
+  /* Unified Glassmorphism Card Style */
+  .glass-card {
+    @apply bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl transition-all duration-300;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .glass-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card:hover {
+    @apply shadow-2xl;
+    border-color: rgba(212, 163, 115, 0.3);
+  }
+
+  .dark .glass-card:hover {
+    border-color: rgba(231, 167, 101, 0.3);
+  }
+
+  /* Glass Card Variants */
+  .glass-card-sm {
+    @apply bg-white/50 dark:bg-white/10 backdrop-blur-sm rounded-full shadow-sm;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .glass-card-sm {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card-sm:hover {
+    @apply shadow-md;
+    border-color: rgba(212, 163, 115, 0.3);
+  }
 }
 
 @layer utilities {

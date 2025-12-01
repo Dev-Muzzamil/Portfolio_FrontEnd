@@ -41,7 +41,7 @@ const Footer = () => {
               }}
               title="Triple-click for admin access"
             >
-              © {currentYear} {siteSettings?.site?.title || 'Portfolio'}. All rights reserved.
+              © {currentYear} {siteSettings?.site?.author || 'Syed Muzzamil Ali'}. All rights reserved.
             </p>
             {contactEmail && (
               <a

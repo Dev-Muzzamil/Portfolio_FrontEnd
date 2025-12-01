@@ -103,7 +103,7 @@ const UnifiedModal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative bg-paper dark:bg-paper-dark rounded-soft w-[95vw] max-w-6xl h-[90vh] shadow-2xl dark:shadow-strong-dark border border-ink/10 dark:border-ink-dark/10 overflow-hidden flex flex-col ${className}`}
+            className={`relative bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl w-[95vw] max-w-6xl h-[90vh] shadow-2xl dark:shadow-strong-dark border border-white/50 dark:border-white/10 overflow-hidden flex flex-col ${className}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}

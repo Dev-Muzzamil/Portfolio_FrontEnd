@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
+import { Code2, Database, Brain, Palette, Server, Cloud, Smartphone, GitBranch, Zap, Package } from 'lucide-react'
 
 const Skills = ({ data }) => {
     const [ref, inView] = useInView({
@@ -32,6 +33,35 @@ const Skills = ({ data }) => {
 
     if (!data || data.length === 0) return null
 
+    // Mapping of category names to lucide-react icons
+    const getCategoryIcon = (category) => {
+        const normalizedCategory = category.toLowerCase().trim()
+        
+        // Icon mapping with keyword matching
+        if (normalizedCategory.includes('frontend') || normalizedCategory.includes('react') || normalizedCategory.includes('vue') || normalizedCategory.includes('angular') || normalizedCategory.includes('javascript') || normalizedCategory.includes('css') || normalizedCategory.includes('html')) return Code2
+        
+        if (normalizedCategory.includes('backend') || normalizedCategory.includes('node') || normalizedCategory.includes('python') || normalizedCategory.includes('server') || normalizedCategory.includes('api')) return Server
+        
+        if (normalizedCategory.includes('database') || normalizedCategory.includes('sql') || normalizedCategory.includes('mongo') || normalizedCategory.includes('postgres') || normalizedCategory.includes('firebase') || normalizedCategory.includes('db')) return Database
+        
+        if (normalizedCategory.includes('ai') || normalizedCategory.includes('ml') || normalizedCategory.includes('machine') || normalizedCategory.includes('learning') || normalizedCategory.includes('tensorflow') || normalizedCategory.includes('pytorch') || normalizedCategory.includes('deep')) return Brain
+        
+        if (normalizedCategory.includes('design') || normalizedCategory.includes('ui') || normalizedCategory.includes('ux') || normalizedCategory.includes('figma') || normalizedCategory.includes('photoshop') || normalizedCategory.includes('sketch')) return Palette
+        
+        if (normalizedCategory.includes('devops') || normalizedCategory.includes('docker') || normalizedCategory.includes('kubernetes') || normalizedCategory.includes('jenkins')) return Cloud
+        
+        if (normalizedCategory.includes('cloud') || normalizedCategory.includes('aws') || normalizedCategory.includes('azure') || normalizedCategory.includes('gcp')) return Cloud
+        
+        if (normalizedCategory.includes('mobile') || normalizedCategory.includes('ios') || normalizedCategory.includes('android') || normalizedCategory.includes('flutter') || normalizedCategory.includes('react native')) return Smartphone
+        
+        if (normalizedCategory.includes('git') || normalizedCategory.includes('version') || normalizedCategory.includes('github') || normalizedCategory.includes('gitlab')) return GitBranch
+        
+        if (normalizedCategory.includes('tool') || normalizedCategory.includes('utility') || normalizedCategory.includes('build') || normalizedCategory.includes('webpack') || normalizedCategory.includes('vite')) return Package
+        
+        // Default to Zap
+        return Zap
+    }
+
     // Helper to determine grid span based on item count
     const getGridSpan = (count) => {
         if (count > 10) return "sm:col-span-2 lg:col-span-2 row-span-2"
@@ -40,7 +70,12 @@ const Skills = ({ data }) => {
     }
 
     return (
-        <section id="skills" ref={ref} className="py-16 sm:py-24 lg:py-32 bg-paper dark:bg-paper-dark relative transition-colors duration-300">
+        <section id="skills" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+            {/* Warm Gradient Background */}
+            <div className="absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#E6C2A3]/20 via-paper to-paper dark:from-[#3D3530]/40 dark:via-paper-dark dark:to-paper-dark" />
+                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+            </div>
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
@@ -58,7 +93,21 @@ const Skills = ({ data }) => {
                 </motion.div>
 
                 {/* Bento Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 auto-rows-min">
+                <motion.div 
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 auto-rows-min"
+                    initial="hidden"
+                    animate={inView ? "visible" : "hidden"}
+                    variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                            opacity: 1,
+                            transition: {
+                                staggerChildren: 0.06,
+                                delayChildren: 0.2
+                            }
+                        }
+                    }}
+                >
                     {categories.map((category, catIndex) => {
                         const skills = groupedSkills[category]
                         const spanClass = getGridSpan(skills.length)
@@ -66,17 +115,27 @@ const Skills = ({ data }) => {
                         return (
                             <motion.div
                                 key={category}
-                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                                animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-                                transition={{ duration: 0.5, delay: catIndex * 0.05 }}
+                                variants={{
+                                    hidden: { opacity: 0, y: 20, scale: 0.95 },
+                                    visible: { 
+                                        opacity: 1, 
+                                        y: 0, 
+                                        scale: 1,
+                                        transition: { 
+                                            type: "spring",
+                                            stiffness: 100,
+                                            damping: 15
+                                        }
+                                    }
+                                }}
                                 className={`
                                     group relative overflow-hidden
-                                    bg-gradient-to-br from-white/40 to-white/10 dark:from-white/10 dark:to-white/5
-                                    backdrop-blur-xl border border-white/40 dark:border-white/10
-                                    rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 transition-all duration-500
-                                    shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]
-                                    hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] dark:hover:shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]
-                                    hover:-translate-y-1 hover:border-white/60 dark:hover:border-white/20
+                                    bg-white/40 dark:bg-white/5
+                                    backdrop-blur-xl border border-white/50 dark:border-white/10
+                                    rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 transition-all duration-300
+                                    shadow-xl dark:shadow-strong-dark
+                                    hover:shadow-2xl dark:hover:shadow-2xl
+                                    hover:-translate-y-1 hover:border-accent/30 dark:hover:border-accent-dark/30
                                     flex flex-col
                                     ${spanClass}
                                 `}
@@ -86,21 +145,26 @@ const Skills = ({ data }) => {
                                 <div className="absolute -bottom-10 -left-10 w-20 sm:w-24 h-20 sm:h-24 bg-ink/5 dark:bg-white/5 rounded-full blur-2xl group-hover:bg-ink/10 dark:group-hover:bg-white/10 transition-colors duration-500" />
 
                                 <h3 className="font-serif text-lg sm:text-xl lg:text-2xl text-ink dark:text-ink-dark mb-3 sm:mb-4 lg:mb-6 relative z-10 flex items-center gap-2 sm:gap-3 flex-wrap">
+                                    {(() => {
+                                        const IconComponent = getCategoryIcon(category)
+                                        return <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-accent dark:text-accent-dark flex-shrink-0" />
+                                    })()}
                                     <span className="break-words">{category}</span>
-                                    <span className="text-[10px] sm:text-xs font-sans font-bold text-ink/40 dark:text-ink-dark/40 bg-white/30 dark:bg-white/10 border border-white/40 dark:border-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
-                                        {skills.length}
-                                    </span>
                                 </h3>
 
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2 relative z-10 content-start">
                                     {skills.map((skill, skillIndex) => (
                                         <motion.div
                                             key={skill._id || skill.name || skillIndex}
-                                            whileHover={{ scale: 1.05 }}
+                                            initial={{ opacity: 0, scale: 0.85 }}
+                                            animate={inView ? { opacity: 1, scale: 1 } : {}}
+                                            transition={{ delay: 0.1 + skillIndex * 0.03 }}
+                                            whileHover={{ scale: 1.08 }}
+                                            whileTap={{ scale: 0.95 }}
                                             className="
-                                                flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 
-                                                bg-white/30 dark:bg-white/10 backdrop-blur-sm border border-white/40 dark:border-white/10 rounded-lg sm:rounded-xl 
-                                                shadow-sm hover:shadow-md hover:bg-white/50 dark:hover:bg-white/20 hover:border-white/60 dark:hover:border-white/20
+                                                flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 
+                                                bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 rounded-full
+                                                shadow-sm hover:shadow-md hover:bg-white/70 dark:hover:bg-white/20 hover:border-accent/30 dark:hover:border-accent-dark/30
                                                 transition-all duration-300 cursor-default
                                             "
                                         >
@@ -121,7 +185,7 @@ const Skills = ({ data }) => {
                             </motion.div>
                         )
                     })}
-                </div>
+                </motion.div>
             </div>
         </section>
     )
