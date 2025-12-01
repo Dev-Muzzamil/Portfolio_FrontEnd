@@ -41,10 +41,10 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
 
     const { site, seo } = settings || {}
 
-    // Priority: Prop > Dynamic Setting > Default
+    // Priority: Prop > Dynamic Setting (from backend) > Default
     const title = propTitle
         ? `${propTitle} | ${site?.title || 'Syed Muzzamil Ali'}`
-        : (site?.title || 'Syed Muzzamil Ali - Full Stack Developer | React, Node.js & Cloud Expert')
+        : (site?.title || 'Syed Muzzamil Ali - Personal Portfolio')
 
     const description = propDescription || seo?.description || site?.description || 'Portfolio of Syed Muzzamil Ali - Full Stack Developer specializing in React, Node.js, MongoDB, AWS, and modern web technologies.'
 
