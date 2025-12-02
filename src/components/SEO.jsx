@@ -97,6 +97,9 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
             <meta name="twitter:description" content={description} />
             {image && <meta name="twitter:image" content={image} />}
 
+            {/* Canonical URL */}
+            <link rel="canonical" href={url} />
+
             {/* Favicon (dynamic) */}
             {site?.faviconUrl && (
                 <link rel="icon" type="image/png" href={site.faviconUrl} />

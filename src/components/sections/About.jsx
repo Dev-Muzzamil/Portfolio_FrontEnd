@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import SEO from '../SEO';
+import LazyImage from '../LazyImage';
 
 const About = ({ data }) => {
   const safeData = data || {};
@@ -58,7 +59,12 @@ const About = ({ data }) => {
                 className="relative aspect-[3/4] w-[60%] sm:w-[50%] lg:w-[70%] mx-auto rounded-arch overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-all duration-700"
               >
                 {safeData.photo ? (
-                  <img src={safeData.photo} alt="Portrait" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                  <LazyImage 
+                    src={safeData.photo} 
+                    alt="Portrait" 
+                    className="w-full h-full"
+                    imgClassName="object-cover grayscale hover:grayscale-0 transition-all duration-700" 
+                  />
                 ) : (
                   <div className="w-full h-full bg-gray/10 flex items-center justify-center">
                     <span className="text-4xl sm:text-5xl lg:text-6xl">👤</span>

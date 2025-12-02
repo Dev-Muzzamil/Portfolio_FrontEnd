@@ -3,6 +3,7 @@ import { Download, ChevronDown, Github, Linkedin, Globe, Mail, Phone, MapPin, In
 import { normalizeSocial } from '../../utils/social'
 import HeroMarquee from '../HeroMarquee'
 import Reveal from '../Reveal'
+import LazyImage from '../LazyImage'
 
 // Custom X (formerly Twitter) icon component
 const XIcon = (props) => (
@@ -119,17 +120,26 @@ const Hero = ({ data }) => {
                                 return (
                                     <div className="flex gap-4 sm:gap-6 justify-center lg:justify-start pt-4 sm:pt-8 flex-wrap">
                                         {entries.map(([key, Icon]) => {
+                                            const isEmail = key === 'email';
                                             const href = 
-                                                key === 'email' ? `mailto:${contact.email}` :
+                                                isEmail ? '#' :
                                                 key === 'phone' ? `tel:${contact.phone}` :
                                                 social[key]
                                             
+                                            const handleClick = (e) => {
+                                                if (isEmail) {
+                                                    e.preventDefault();
+                                                    window.location.href = `mailto:${contact.email}`;
+                                                }
+                                            }
+
                                             return (
                                                 <a
                                                     key={key}
                                                     href={href}
-                                                    target={key === 'email' || key === 'phone' ? undefined : '_blank'}
-                                                    rel={key === 'email' || key === 'phone' ? undefined : 'noopener noreferrer'}
+                                                    onClick={handleClick}
+                                                    target={isEmail || key === 'phone' ? undefined : '_blank'}
+                                                    rel={isEmail || key === 'phone' ? undefined : 'noopener noreferrer'}
                                                     className="text-ink/40 dark:text-ink-dark/40 hover:text-accent dark:hover:text-accent-dark transition-colors duration-300 transform hover:scale-110"
                                                     aria-label={key}
                                                 >
@@ -148,10 +158,12 @@ const Hero = ({ data }) => {
                         <Reveal delay={0.4} width="100%">
                             <div className="relative w-full max-w-[280px] sm:max-w-[350px] lg:max-w-[400px] aspect-[3/4] rounded-arch overflow-hidden bg-paper dark:bg-paper-dark border border-ink/10 dark:border-ink-dark/10 grayscale hover:grayscale-0 transition-all duration-1000 ease-out shadow-2xl dark:shadow-strong-dark hover:rotate-0 hover:shadow-3xl group mx-auto">
                                 {data?.backgroundImage ? (
-                                    <img
+                                    <LazyImage
                                         src={data.backgroundImage}
                                         alt={data?.name}
-                                        className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000"
+                                        className="w-full h-full"
+                                        imgClassName="object-cover scale-105 group-hover:scale-100 transition-transform duration-1000"
+                                        priority={true}
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -237,17 +249,26 @@ const Hero = ({ data }) => {
                             return (
                                 <div className="flex gap-4 sm:gap-6 justify-center pt-4 sm:pt-8 flex-wrap">
                                     {entries.map(([key, Icon]) => {
+                                        const isEmail = key === 'email';
                                         const href = 
-                                            key === 'email' ? `mailto:${contact.email}` :
+                                            isEmail ? '#' :
                                             key === 'phone' ? `tel:${contact.phone}` :
                                             social[key]
+                                        
+                                        const handleClick = (e) => {
+                                            if (isEmail) {
+                                                e.preventDefault();
+                                                window.location.href = `mailto:${contact.email}`;
+                                            }
+                                        }
                                         
                                         return (
                                             <a
                                                 key={key}
                                                 href={href}
-                                                target={key === 'email' || key === 'phone' ? undefined : '_blank'}
-                                                rel={key === 'email' || key === 'phone' ? undefined : 'noopener noreferrer'}
+                                                onClick={handleClick}
+                                                target={isEmail || key === 'phone' ? undefined : '_blank'}
+                                                rel={isEmail || key === 'phone' ? undefined : 'noopener noreferrer'}
                                                 className="text-ink/40 dark:text-ink-dark/40 hover:text-accent dark:hover:text-accent-dark transition-colors duration-300 transform hover:scale-110"
                                                 aria-label={key}
                                             >

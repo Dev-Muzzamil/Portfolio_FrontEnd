@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ExternalLink, Github, Eye, ChevronDown, Code, Award, FileText, Edit, Trash2, EyeOff, ArrowUpRight } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/helpers';
 import TechnologyIcon from './TechnologyIcon';
+import LazyImage from './LazyImage';
 
 const UnifiedCard = ({
     data,
@@ -173,10 +174,11 @@ const UnifiedCard = ({
                 {/* Image Section */}
                 <div className={`relative overflow-hidden border-b border-ink/5 dark:border-ink-dark/5 ${currentConfig.imageHeight} flex-shrink-0 bg-gray/5 dark:bg-white/5 transform-style-3d`}>
                     {imageSource.url ? (
-                        <img
+                        <LazyImage
                             src={imageSource.url}
                             alt={imageSource.alt}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out transform group-hover:scale-105"
+                            className="w-full h-full"
+                            imgClassName="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out transform group-hover:scale-105"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">

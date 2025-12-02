@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import NotFound from './pages/NotFound'
 import { ThemeProvider } from './context/ThemeContext'
 import SEO from './components/SEO'
 import CursorSystem from './components/CursorSystem'
@@ -46,6 +47,7 @@ function App() {
                 )
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         {!isAdminRoute && <Footer />}
