@@ -45,7 +45,7 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
     // fall back to the page title (propTitle) so the page still shows a meaningful title.
     const title = site?.title || propTitle || 'portfoliuo website'
 
-    const description = propDescription || seo?.description || site?.description || 'Portfolio of Syed Muzzamil Ali - Full Stack Developer specializing in React, Node.js, MongoDB, AWS, and modern web technologies.'
+    const description = propDescription || seo?.description || site?.description || 'Portfolio of Syed Muzzamil Ali - Full Stack Developer specializing in React, Node.js, MongoDB, AWS, and modern web technologies. Explore my projects, skills, and professional journey.'
 
     const keywords = propKeywords || seo?.keywords || 'Syed Muzzamil Ali, Muzzaml Ali, Muzzamil, full stack developer, React developer, Node.js, MongoDB, AWS, portfolio, web developer'
 
@@ -62,7 +62,11 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
         "url": "https://syedmuzzamilali.me",
         "sameAs": [
             "https://linkedin.com/in/syed-muzzamil-ali",
-            "https://github.com/Dev-Muzzamil"
+            "https://github.com/Dev-Muzzamil",
+            "https://x.com/Dev_Muzzamil",
+            "https://instagram.com/sd.muzzamilali",
+            "https://facebook.com/sd.muzzamilali",
+            "https://youtube.com/channel/UCKAeEeJ_IG-aNuT3S3zEGVQ"
         ],
         "jobTitle": "Full Stack Developer",
         "worksFor": {
@@ -71,7 +75,47 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
         },
         "description": description,
         "knowsAbout": ["JavaScript", "React", "Node.js", "MongoDB", "AWS", "TypeScript", "Full Stack Development"],
-        "image": image
+        "image": image,
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Hyderabad",
+            "addressCountry": "IN"
+        },
+        "email": "mailto:syedmuzzamilali10@gmail.com",
+        "telephone": "+919966382488"
+    }
+
+    // Local Business Schema (ProfessionalService)
+    const localBusinessSchema = {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "Syed Muzzamil Ali - Full Stack Developer",
+        "image": image,
+        "url": "https://syedmuzzamilali.me",
+        "telephone": "+919966382488",
+        "email": "syedmuzzamilali10@gmail.com",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Hyderabad",
+            "addressCountry": "IN"
+        },
+        "priceRange": "$$",
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+            ],
+            "opens": "09:00",
+            "closes": "18:00"
+        },
+        "sameAs": [
+            "https://linkedin.com/in/syed-muzzamil-ali",
+            "https://github.com/Dev-Muzzamil"
+        ]
     }
 
     return (
@@ -108,6 +152,20 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
             {/* JSON-LD Schema */}
             <script type="application/ld+json">
                 {JSON.stringify(schema)}
+            </script>
+            <script type="application/ld+json">
+                {JSON.stringify(localBusinessSchema)}
+            </script>
+            
+            {/* Google Analytics (GA4) */}
+            <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDMJY3X94F"></script>
+            <script>
+                {`
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'G-CDMJY3X94F');
+                `}
             </script>
         </Helmet>
     )

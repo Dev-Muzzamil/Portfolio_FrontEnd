@@ -115,7 +115,7 @@ const Projects = ({ data, skills = [] }) => {
     <section id="projects" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
       <SEO
         title="Projects"
-        description="Explore my portfolio of projects ranging from web development to AI/ML."
+        description="Explore my portfolio of projects ranging from web development to AI/ML. See how I solve real-world problems with code."
       />
       {/* Warm Gradient Background */}
       <div className="absolute inset-0 -z-10">

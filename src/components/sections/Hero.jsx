@@ -46,9 +46,9 @@ const Hero = ({ data }) => {
                     </Reveal>
 
                     <Reveal delay={0.4}>
-                        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl leading-[0.85] text-ink dark:text-ink-dark tracking-tight">
+                        <p className="font-serif text-4xl sm:text-5xl md:text-6xl leading-[0.85] text-ink dark:text-ink-dark tracking-tight">
                             {data?.name || 'Your Name'}
-                        </h1>
+                        </p>
                     </Reveal>
                 </div>
 

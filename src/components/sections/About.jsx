@@ -21,7 +21,7 @@ const About = ({ data }) => {
     <section id="about" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
       <SEO
         title="About Me"
-        description={safeData.summary || "Learn more about Syed Muzzamil Ali, a Full Stack Developer."}
+        description={safeData.summary || "Learn more about Syed Muzzamil Ali, a Full Stack Developer. Explore my professional background, skills, and journey."}
       />
       {/* Warm Gradient Background */}
       <div className="absolute inset-0 -z-10">
