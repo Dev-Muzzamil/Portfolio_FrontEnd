@@ -5,7 +5,7 @@ const HeroOrbs = () => {
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
             {/* Warm Orb */}
             <motion.div
-                className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-warm-orb opacity-40 mix-blend-multiply filter blur-[80px] md:blur-[120px]"
+                className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-warm-orb dark:bg-warm-orb-dark opacity-40 mix-blend-multiply dark:mix-blend-soft-light filter blur-[80px] md:blur-[120px]"
                 animate={{
                     x: [0, 100, 0],
                     y: [0, 50, 0],
@@ -20,7 +20,7 @@ const HeroOrbs = () => {
 
             {/* Cool Orb */}
             <motion.div
-                className="absolute bottom-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-cool-orb opacity-40 mix-blend-multiply filter blur-[80px] md:blur-[120px]"
+                className="absolute bottom-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-cool-orb dark:bg-cool-orb-dark opacity-40 mix-blend-multiply dark:mix-blend-soft-light filter blur-[80px] md:blur-[120px]"
                 animate={{
                     x: [0, -100, 0],
                     y: [0, -50, 0],

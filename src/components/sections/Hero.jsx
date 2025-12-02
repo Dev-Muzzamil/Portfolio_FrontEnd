@@ -26,12 +26,11 @@ const Hero = ({ data }) => {
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 transition-colors duration-300">
-            {/* Warm Gradient Background */}
+            {/* Clean Gradient Background */}
             <div className="absolute inset-0 -z-20">
                 <div className="absolute inset-0 bg-paper dark:bg-paper-dark" />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#E6C2A3]/30 via-paper to-paper dark:from-[#3D3530]/50 dark:via-paper-dark dark:to-paper-dark" />
-                <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-[#D4A373]/20 to-transparent dark:from-[#E7A765]/10" />
-                <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-[#C5D1D6]/10 to-transparent dark:from-[#2A2825]/20" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#E6C2A3]/15 dark:to-[#1e293b]/40" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4A373]/10 via-transparent to-transparent dark:from-[#D4A373]/5" />
             </div>
             <HeroMarquee text={`${data?.role || 'CREATIVE DEVELOPER'} • ${data?.name || 'PORTFOLIO'} • `} />
 
@@ -164,7 +163,7 @@ const Hero = ({ data }) => {
 
                                 {/* Glass Overlay Card */}
                                 {(contact.location || contact.email) && (
-                                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 lg:bottom-8 lg:left-8 lg:right-8 p-4 sm:p-5 lg:p-6 bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 lg:bottom-8 lg:left-8 lg:right-8 p-4 sm:p-5 lg:p-6 bg-white/70 dark:bg-black/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-white/[0.1] shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                                         <div className="flex flex-col gap-2 sm:gap-3">
                                             {contact.location && (
                                                 <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-sans font-medium text-ink dark:text-ink-dark">

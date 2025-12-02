@@ -28,7 +28,7 @@ const Footer = () => {
   }, [])
 
   return (
-    <footer className="bg-paper dark:bg-paper-dark border-t border-ink/10 dark:border-ink-dark/10 py-8 sm:py-12 lg:py-16 relative z-10 transition-colors duration-300">
+    <footer className="bg-paper dark:bg-paper-dark border-t border-ink/10 dark:border-white/5 py-8 sm:py-12 lg:py-16 relative z-10 transition-colors duration-300">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
           <div className="text-center md:text-left space-y-3 sm:space-y-4">
@@ -43,15 +43,6 @@ const Footer = () => {
             >
               © {currentYear} {siteSettings?.site?.author || 'Syed Muzzamil Ali'}. All rights reserved.
             </p>
-            {contactEmail && (
-              <a
-                href={`mailto:${contactEmail}`}
-                className="inline-flex items-center gap-2 font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark hover:text-accent dark:hover:text-accent-dark transition-colors"
-              >
-                <Mail className="w-3 h-3" />
-                <span className="truncate max-w-[200px] sm:max-w-none">{contactEmail}</span>
-              </a>
-            )}
           </div>
 
           {(() => {

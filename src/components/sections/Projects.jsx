@@ -119,8 +119,8 @@ const Projects = ({ data, skills = [] }) => {
       />
       {/* Warm Gradient Background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/15 via-paper to-paper dark:from-[#3D3530]/30 dark:via-paper-dark dark:to-paper-dark" />
-        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/10 via-transparent to-transparent dark:from-[#1e293b]/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#D4A373]/6 via-transparent to-transparent dark:from-[#D4A373]/5" />
       </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}

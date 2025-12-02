@@ -8,7 +8,7 @@ const Experience = ({ data }) => {
         <div className="h-full relative">
             {/* Warm Gradient Background */}
             <div className="absolute inset-0 -z-10 rounded-3xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#E6C2A3]/10 to-transparent dark:from-[#3D3530]/20" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E6C2A3]/8 via-transparent to-transparent dark:from-[#D4A373]/5" />
             </div>
             <div className="text-center mb-8 sm:mb-10 lg:mb-12">
                 <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-ink dark:text-ink-dark mb-2 sm:mb-3 lg:mb-4">
@@ -43,7 +43,7 @@ const Experience = ({ data }) => {
                             <span className="absolute -left-[5px] top-4 sm:top-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent dark:bg-accent-dark ring-2 sm:ring-4 ring-paper dark:ring-paper-dark group-hover:scale-150 transition-transform duration-300" />
 
                             {/* Glassmorphism Card */}
-                            <div className="p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30">
+                            <div className="p-4 sm:p-5 lg:p-6 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none border border-white/60 dark:border-white/[0.06] shadow-lg shadow-black/5 dark:shadow-black/30 hover:shadow-xl hover:bg-white/60 dark:hover:bg-surface-elevated transition-all duration-300">
 
                                 {/* Period */}
                                 <span className="font-sans text-[9px] sm:text-[10px] font-bold text-accent dark:text-accent-dark tracking-widest uppercase mb-0.5 sm:mb-1 block">

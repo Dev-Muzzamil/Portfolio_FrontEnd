@@ -16,17 +16,20 @@ module.exports = {
                 glass: 'rgba(242, 240, 233, 0.8)',
                 'warm-orb': '#E6C2A3',
                 'cool-orb': '#C5D1D6',
-                // Dark mode
-                'paper-dark': '#1C1917',
-                'ink-dark': '#F5F5F4',
-                'accent-dark': '#E7A765',
-                'gray-dark': '#A1A1A1',
-                'glass-dark': 'rgba(28, 25, 23, 0.9)',
-                'warm-orb-dark': '#3D3530',
-                'cool-orb-dark': '#2A2825',
-                // Surfaces for dark mode
-                'surface-dark': '#252220',
-                'surface-dark-elevated': '#2D2926',
+                // Dark mode specific (Modern Slate/Zinc UI)
+                'paper-dark': '#09090b', // Zinc 950 - Much cleaner dark background
+                'ink-dark': '#fafafa',   // Zinc 50 - High contrast text
+                'accent-dark': '#D4A373', // Keep the gold accent
+                'gray-dark': '#a1a1aa',   // Zinc 400
+                'glass-dark': 'rgba(9, 9, 11, 0.8)',
+                'warm-orb-dark': '#453a2d', // Deep warm tone
+                'cool-orb-dark': '#1e293b', // Slate 800
+                // Surface colors (for dark mode cards/backgrounds)
+                surface: {
+                    DEFAULT: '#FFFFFF',
+                    dark: '#18181b',    // Zinc 900
+                    elevated: '#27272a', // Zinc 800
+                },
             },
             fontFamily: {
                 serif: ['Cormorant Garamond', 'serif'],

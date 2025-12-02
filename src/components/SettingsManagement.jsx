@@ -61,7 +61,7 @@ const SettingsManagement = () => {
       if (res.data && res.data.settings) {
         // Update global site settings and apply title/favicon immediately
         window.__SITE_SETTINGS__ = res.data.settings
-        if (res.data.settings.site?.title) document.title = res.data.settings.site.title
+        // Do not set document.title here — allow SEO (Helmet) to control page titles
         if (res.data.settings.site?.faviconUrl) {
           const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
           link.type = 'image/png'

@@ -131,7 +131,7 @@ const AdminDashboard = ({ setIsAuthenticated }) => {
   ]
 
   const StatCard = ({ title, value, icon: Icon, color }) => (
-    <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 shadow-xl dark:shadow-strong-dark hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-300 hover:border-accent/30 dark:hover:border-accent-dark/30">
+    <div className="bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none border border-white/70 dark:border-white/[0.06] rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 shadow-lg shadow-black/5 dark:shadow-black/30 hover:shadow-xl hover:bg-white/70 dark:hover:bg-surface-elevated transition-all duration-300">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-1 sm:mb-2 truncate">{title}</p>
@@ -184,7 +184,7 @@ const AdminDashboard = ({ setIsAuthenticated }) => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl dark:shadow-strong-dark">
+      <div className="bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none border border-white/70 dark:border-white/[0.06] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg shadow-black/5 dark:shadow-black/30">
         <h3 className="font-serif text-xl sm:text-2xl text-ink dark:text-ink-dark mb-4 sm:mb-6">Recent Messages</h3>
         <div className="space-y-2 sm:space-y-4">
           {data.contacts.length > 0 ? (

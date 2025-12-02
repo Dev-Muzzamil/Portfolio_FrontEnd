@@ -113,10 +113,10 @@ const GithubSection = ({ username, about }) => {
       transition={{ duration: 0.8 }}
       viewport={{ once: true, margin: "-100px" }}
     >
-      {/* Warm Gradient Background */}
+      {/* Clean Gradient Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#E6C2A3]/25 via-paper to-paper dark:from-[#3D3530]/50 dark:via-paper-dark dark:to-paper-dark" />
-        <div className="absolute top-0 left-0 w-2/3 h-1/2 bg-gradient-to-br from-[#D4A373]/15 to-transparent dark:from-[#E7A765]/10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#E6C2A3]/12 via-transparent to-transparent dark:from-[#4A3C32]/18" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#D4A373]/8 via-transparent to-transparent dark:from-[#5C4A3D]/12" />
       </div>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -144,7 +144,7 @@ const GithubSection = ({ username, about }) => {
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
               style={{ position: 'sticky', top: '6rem' }}
-              className="bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark"
+              className="bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/70 dark:border-white/[0.06] shadow-lg shadow-black/5 dark:shadow-black/30"
             >
               <div className="text-center mb-6">
                 <img
@@ -235,7 +235,7 @@ const GithubSection = ({ username, about }) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 viewport={{ once: true }}
-                className="mb-6 sm:mb-8 bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark"
+                className="mb-6 sm:mb-8 bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/70 dark:border-white/[0.06] shadow-lg shadow-black/5 dark:shadow-black/30"
               >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-sans text-sm sm:text-base font-bold uppercase tracking-widest text-ink dark:text-ink-dark flex items-center gap-2">
@@ -319,25 +319,25 @@ const GithubSection = ({ username, about }) => {
 
                 {/* Stats Summary */}
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                  <div className="bg-white/30 dark:bg-white/5 rounded-xl p-3 sm:p-4">
+                  <div className="bg-white/30 dark:bg-surface-elevated rounded-xl p-3 sm:p-4">
                     <div className="font-serif text-xl sm:text-2xl text-ink dark:text-ink-dark">
                       {contributions?.totalContributions || 0}
                     </div>
                     <div className="font-sans text-[10px] sm:text-xs text-ink/60 dark:text-ink-dark/60 uppercase tracking-wider">This Year</div>
                   </div>
-                  <div className="bg-white/30 dark:bg-white/5 rounded-xl p-3 sm:p-4">
+                  <div className="bg-white/30 dark:bg-surface-elevated rounded-xl p-3 sm:p-4">
                     <div className="font-serif text-xl sm:text-2xl text-ink dark:text-ink-dark">
                       {contributions?.currentStreak || 0}
                     </div>
                     <div className="font-sans text-[10px] sm:text-xs text-ink/60 dark:text-ink-dark/60 uppercase tracking-wider">Current Streak</div>
                   </div>
-                  <div className="bg-white/30 dark:bg-white/5 rounded-xl p-3 sm:p-4">
+                  <div className="bg-white/30 dark:bg-surface-elevated rounded-xl p-3 sm:p-4">
                     <div className="font-serif text-xl sm:text-2xl text-ink dark:text-ink-dark">
                       {contributions?.longestStreak || 0}
                     </div>
                     <div className="font-sans text-[10px] sm:text-xs text-ink/60 dark:text-ink-dark/60 uppercase tracking-wider">Longest Streak</div>
                   </div>
-                  <div className="bg-white/30 dark:bg-white/5 rounded-xl p-3 sm:p-4">
+                  <div className="bg-white/30 dark:bg-surface-elevated rounded-xl p-3 sm:p-4">
                     <div className="font-serif text-xl sm:text-2xl text-ink dark:text-ink-dark">
                       {contributions?.avgPerWeek || 0}
                     </div>
@@ -366,7 +366,7 @@ const GithubSection = ({ username, about }) => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.05 }}
                   viewport={{ once: true }}
-                  className="block bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50 dark:border-white/10 shadow-lg dark:shadow-strong-dark hover:shadow-xl dark:hover:shadow-2xl hover:-translate-y-1 hover:border-accent dark:hover:border-accent-dark transition-all duration-300 group"
+                  className="block bg-white/50 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/60 dark:border-white/[0.06] shadow-md shadow-black/5 dark:shadow-black/25 hover:shadow-lg hover:bg-white/60 dark:hover:bg-surface-elevated hover:-translate-y-1 transition-all duration-300 group"
                 >
                   <div className="flex items-start justify-between mb-2 sm:mb-3">
                     <div className="flex-1 min-w-0">

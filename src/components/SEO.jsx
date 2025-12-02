@@ -41,10 +41,9 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
 
     const { site, seo } = settings || {}
 
-    // Priority: Prop > Dynamic Setting (from backend) > Default
-    const title = propTitle
-        ? `${propTitle} | ${site?.title || 'Syed Muzzamil Ali'}`
-        : (site?.title || 'Syed Muzzamil Ali - Personal Portfolio')
+    // Use site title when available. If backend/settings are not reachable,
+    // fall back to the page title (propTitle) so the page still shows a meaningful title.
+    const title = site?.title || propTitle || 'portfoliuo website'
 
     const description = propDescription || seo?.description || site?.description || 'Portfolio of Syed Muzzamil Ali - Full Stack Developer specializing in React, Node.js, MongoDB, AWS, and modern web technologies.'
 

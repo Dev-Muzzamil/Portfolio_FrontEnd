@@ -86,7 +86,7 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
                          top-4 sm:top-6 md:top-8
                          w-fit max-w-[95vw] sm:max-w-[90vw] px-3 sm:px-4 md:px-6 py-2 sm:py-3
                          bg-paper/95 dark:bg-paper-dark/95 sm:bg-paper/80 sm:dark:bg-paper-dark/90 backdrop-blur-md
-                         border border-ink/20 dark:border-ink-dark/30 sm:border-ink/10 sm:dark:border-white/10
+                         border border-ink/20 dark:border-white/10 sm:border-ink/10 sm:dark:border-white/10
                          rounded-full shadow-lg dark:shadow-strong-dark
                          focus:outline-none focus:ring-2 focus:ring-accent/20
                          flex items-center justify-between gap-3 sm:gap-4 md:gap-8`

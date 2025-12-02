@@ -103,7 +103,7 @@ const UnifiedModal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl w-[95vw] max-w-6xl h-[90vh] shadow-2xl dark:shadow-strong-dark border border-white/50 dark:border-white/10 overflow-hidden flex flex-col ${className}`}
+            className={`relative bg-white/80 dark:bg-surface-dark backdrop-blur-2xl dark:backdrop-blur-none rounded-2xl sm:rounded-3xl w-[95vw] max-w-6xl h-[90vh] shadow-2xl shadow-black/20 dark:shadow-black/40 border border-white/50 dark:border-white/[0.06] overflow-hidden flex flex-col ${className}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -116,7 +116,7 @@ const UnifiedModal = ({
 
             <div className="overflow-y-auto h-full" ref={scrollRef}>
               {/* Image Section */}
-              <div className="relative h-[60vh] min-h-[400px] bg-gray/5 dark:bg-white/5">
+              <div className="relative h-[60vh] min-h-[400px] bg-gray/5 dark:bg-paper-dark">
                 {imageSource.url ? (
                   <img
                     src={imageSource.url}
@@ -171,17 +171,17 @@ const UnifiedModal = ({
                   </h2>
                   <div className="flex flex-wrap justify-center gap-3">
                     {data.category && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-white/10 text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
+                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
                         {data.category}
                       </span>
                     )}
                     {data.status && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-white/10 text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
+                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
                         {data.status}
                       </span>
                     )}
                     {dateRangeLabel && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-white/10 text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                         <Calendar className="w-3 h-3" />
                         {dateRangeLabel}
                       </span>

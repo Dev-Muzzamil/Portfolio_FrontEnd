@@ -73,8 +73,8 @@ const Skills = ({ data }) => {
         <section id="skills" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
             {/* Warm Gradient Background */}
             <div className="absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-b from-[#E6C2A3]/20 via-paper to-paper dark:from-[#3D3530]/40 dark:via-paper-dark dark:to-paper-dark" />
-                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[#D4A373]/10 to-transparent dark:from-[#E7A765]/5" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#E6C2A3]/10 dark:to-[#1e293b]/20" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4A373]/6 via-transparent to-transparent dark:from-[#D4A373]/5" />
             </div>
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
@@ -130,12 +130,12 @@ const Skills = ({ data }) => {
                                 }}
                                 className={`
                                     group relative overflow-hidden
-                                    bg-white/40 dark:bg-white/5
-                                    backdrop-blur-xl border border-white/50 dark:border-white/10
+                                    bg-white/50 dark:bg-surface-dark
+                                    backdrop-blur-xl dark:backdrop-blur-none border border-white/60 dark:border-white/[0.06]
                                     rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 transition-all duration-300
-                                    shadow-xl dark:shadow-strong-dark
-                                    hover:shadow-2xl dark:hover:shadow-2xl
-                                    hover:-translate-y-1 hover:border-accent/30 dark:hover:border-accent-dark/30
+                                    shadow-lg shadow-black/5 dark:shadow-black/30
+                                    hover:shadow-xl hover:bg-white/60 dark:hover:bg-surface-elevated
+                                    hover:-translate-y-1
                                     flex flex-col
                                     ${spanClass}
                                 `}
@@ -163,8 +163,8 @@ const Skills = ({ data }) => {
                                             whileTap={{ scale: 0.95 }}
                                             className="
                                                 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 
-                                                bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 rounded-full
-                                                shadow-sm hover:shadow-md hover:bg-white/70 dark:hover:bg-white/20 hover:border-accent/30 dark:hover:border-accent-dark/30
+                                                bg-white/40 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/50 dark:border-white/[0.06] rounded-full
+                                                shadow-sm hover:shadow-md hover:bg-white/60 dark:hover:bg-paper-dark
                                                 transition-all duration-300 cursor-default
                                             "
                                         >

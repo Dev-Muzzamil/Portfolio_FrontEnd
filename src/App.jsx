@@ -27,7 +27,7 @@ function App() {
   return (
     <ThemeProvider>
       <SEO />
-      <div className="min-h-screen bg-paper text-ink relative">
+      <div className="min-h-screen bg-paper dark:bg-paper-dark text-ink dark:text-ink-dark relative transition-colors duration-300">
         <CursorSystem />
         <HeroOrbs />
         {!isAdminRoute && (

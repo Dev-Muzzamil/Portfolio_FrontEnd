@@ -135,7 +135,7 @@ const Home = () => {
                 <section id="experience-education" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
                     {/* Warm Gradient Background */}
                     <div className="absolute inset-0 -z-10">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#E6C2A3]/15 via-paper to-[#C5D1D6]/10 dark:from-[#3D3530]/30 dark:via-paper-dark dark:to-[#2A2825]/20" />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E6C2A3]/8 via-transparent to-transparent dark:from-[#D4A373]/5" />
                     </div>
                     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20">

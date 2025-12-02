@@ -61,7 +61,7 @@ const AdminLogin = ({ setIsAuthenticated }) => {
           </p>
         </div>
 
-        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-2xl sm:rounded-3xl p-8 shadow-xl dark:shadow-strong-dark">
+        <div className="bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none border border-white/70 dark:border-white/[0.06] rounded-2xl sm:rounded-3xl p-8 shadow-lg shadow-black/5 dark:shadow-black/30">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div>

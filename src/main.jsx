@@ -50,7 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         // Expose to global so components can consume without a full context for now
         window.__SITE_SETTINGS__ = settings
         try { window.dispatchEvent(new CustomEvent('site-settings-updated', { detail: settings })) } catch (e) { /* ignore */ }
-        if (settings.site.title) document.title = `${settings.site.title}`
+        // Let the SEO component (Helmet) manage the document title
         if (settings.site.faviconUrl) {
           const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
           link.type = 'image/png'

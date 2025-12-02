@@ -84,9 +84,9 @@ const Contact = ({ data }) => {
             />
             {/* Warm Gradient Background */}
             <div className="absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/25 via-paper to-paper dark:from-[#3D3530]/50 dark:via-paper-dark dark:to-paper-dark" />
-                <div className="absolute bottom-0 left-0 w-2/3 h-2/3 bg-gradient-to-tr from-[#D4A373]/15 to-transparent dark:from-[#E7A765]/10" />
-                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[#C5D1D6]/10 to-transparent dark:from-[#2A2825]/15" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/15 via-transparent to-transparent dark:from-[#1e293b]/30" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[#D4A373]/10 via-transparent to-transparent dark:from-[#D4A373]/5" />
+                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[#C5D1D6]/10 to-transparent dark:from-[#1e293b]/20" />
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,7 +120,7 @@ const Contact = ({ data }) => {
                         {/* Contact Details - hidden on mobile, visible on lg+ */}
                         <div className="hidden lg:block space-y-5 sm:space-y-6 lg:space-y-8">
                             <div className="flex items-start gap-4 sm:gap-5 lg:gap-6 group">
-                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                     <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -132,7 +132,7 @@ const Contact = ({ data }) => {
                             </div>
 
                             <div className="flex items-start gap-4 sm:gap-5 lg:gap-6 group">
-                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                     <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -144,7 +144,7 @@ const Contact = ({ data }) => {
                             </div>
 
                             <div className="flex items-start gap-4 sm:gap-5 lg:gap-6 group">
-                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                     <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -189,7 +189,7 @@ const Contact = ({ data }) => {
                                                         href={url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                        className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
                                                         aria-label={key}
                                                     >
                                                         <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -203,7 +203,7 @@ const Contact = ({ data }) => {
                                                         href={link.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                        className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
                                                         aria-label={link.label}
                                                         title={link.label}
                                                     >
@@ -225,7 +225,7 @@ const Contact = ({ data }) => {
                         transition={{ duration: 0.8, delay: 0.4 }}
                         className="order-2 lg:order-2"
                     >
-                        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 md:p-8 lg:p-12 border border-white/50 dark:border-white/10 shadow-xl dark:shadow-strong-dark">
+                        <div className="bg-white/60 dark:bg-surface-dark backdrop-blur-xl dark:backdrop-blur-none rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 md:p-8 lg:p-12 border border-white/70 dark:border-white/[0.06] shadow-lg shadow-black/5 dark:shadow-black/30">
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6 lg:space-y-8">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
                                     <div>
@@ -234,7 +234,7 @@ const Contact = ({ data }) => {
                                             type="text"
                                             id="name"
                                             {...register('name', { required: 'Name is required' })}
-                                            className="w-full bg-white/30 dark:bg-white/10 border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
+                                            className="w-full bg-white/30 dark:bg-surface-elevated border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
                                             placeholder="John Doe"
                                         />
                                         {errors.name && <p className="text-red-500 text-[10px] sm:text-xs mt-1">{errors.name.message}</p>}
@@ -245,7 +245,7 @@ const Contact = ({ data }) => {
                                             type="email"
                                             id="email"
                                             {...register('email', { required: 'Email is required' })}
-                                            className="w-full bg-white/30 dark:bg-white/10 border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
+                                            className="w-full bg-white/30 dark:bg-surface-elevated border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
                                             placeholder="john@example.com"
                                         />
                                         {errors.email && <p className="text-red-500 text-[10px] sm:text-xs mt-1">{errors.email.message}</p>}
@@ -258,7 +258,7 @@ const Contact = ({ data }) => {
                                         type="text"
                                         id="subject"
                                         {...register('subject')}
-                                        className="w-full bg-white/30 dark:bg-white/10 border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
+                                        className="w-full bg-white/30 dark:bg-surface-elevated border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all placeholder-ink/30 dark:placeholder-ink-dark/30"
                                         placeholder="Project Inquiry"
                                     />
                                 </div>
@@ -269,7 +269,7 @@ const Contact = ({ data }) => {
                                         id="message"
                                         rows={4}
                                         {...register('message', { required: 'Message is required' })}
-                                        className="w-full bg-white/30 dark:bg-white/10 border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all resize-none placeholder-ink/30 dark:placeholder-ink-dark/30"
+                                        className="w-full bg-white/30 dark:bg-surface-elevated border-b border-ink/10 dark:border-ink-dark/10 py-2.5 sm:py-3 px-3 sm:px-4 rounded-t-lg text-ink dark:text-ink-dark font-serif text-base sm:text-lg focus:border-accent dark:focus:border-accent-dark focus:bg-white/50 dark:focus:bg-white/20 focus:outline-none transition-all resize-none placeholder-ink/30 dark:placeholder-ink-dark/30"
                                         placeholder="Tell me about your project..."
                                     />
                                     {errors.message && <p className="text-red-500 text-[10px] sm:text-xs mt-1">{errors.message.message}</p>}
@@ -292,7 +292,7 @@ const Contact = ({ data }) => {
                                     <button
                                         type="button"
                                         onClick={handleWhatsApp}
-                                        className="px-6 sm:px-8 py-3 sm:py-4 bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 text-ink dark:text-ink-dark rounded-full font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/80 dark:hover:bg-white/20 hover:text-accent dark:hover:text-accent-dark transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-1 transform duration-300"
+                                        className="px-6 sm:px-8 py-3 sm:py-4 bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] text-ink dark:text-ink-dark rounded-full font-sans text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/80 dark:hover:bg-surface-dark hover:text-accent dark:hover:text-accent-dark transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-1 transform duration-300"
                                     >
                                         <span>WhatsApp</span>
                                         <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -308,7 +308,7 @@ const Contact = ({ data }) => {
                     {/* Contact Details */}
                     <div className="space-y-5 sm:space-y-6">
                         <div className="flex items-start gap-4 sm:gap-5 group">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -320,7 +320,7 @@ const Contact = ({ data }) => {
                         </div>
 
                         <div className="flex items-start gap-4 sm:gap-5 group">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -332,7 +332,7 @@ const Contact = ({ data }) => {
                         </div>
 
                         <div className="flex items-start gap-4 sm:gap-5 group">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center group-hover:border-accent dark:group-hover:border-accent-dark transition-colors shadow-sm flex-shrink-0">
                                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-ink dark:text-ink-dark group-hover:text-accent dark:group-hover:text-accent-dark transition-colors" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -377,7 +377,7 @@ const Contact = ({ data }) => {
                                                     href={url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
                                                     aria-label={key}
                                                 >
                                                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -391,7 +391,7 @@ const Contact = ({ data }) => {
                                                     href={link.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-sm border border-white/60 dark:border-white/10 flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/50 dark:bg-surface-elevated backdrop-blur-sm dark:backdrop-blur-none border border-white/60 dark:border-white/\[0.06\] flex items-center justify-center hover:bg-ink dark:hover:bg-ink-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1"
                                                     aria-label={link.label}
                                                     title={link.label}
                                                 >
