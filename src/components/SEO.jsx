@@ -144,6 +144,15 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
             {/* Canonical URL */}
             <link rel="canonical" href={url} />
 
+            {/* Geo Tags for Bing & Local SEO */}
+            <meta name="geo.region" content="IN-TG" />
+            <meta name="geo.placename" content="Hyderabad" />
+            <meta name="geo.position" content="17.3850;78.4867" />
+            <meta name="ICBM" content="17.3850, 78.4867" />
+
+            {/* Bing Webmaster Tools Verification */}
+            <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
+
             {/* Favicon (dynamic) */}
             {site?.faviconUrl && (
                 <link rel="icon" type="image/png" href={site.faviconUrl} />

@@ -1,6 +1,20 @@
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 const HeroOrbs = () => {
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    if (isMobile) return null
+
     return (
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
             {/* Warm Orb */}

@@ -5,9 +5,9 @@ import { normalizeSocial } from '../utils/social'
 import ErrorBoundary from '../components/ErrorBoundary'
 import SEO from '../components/SEO'
 import LazySection from '../components/LazySection'
+import Hero from '../components/sections/Hero'
 
 // Lazy load components
-const Hero = lazy(() => import('../components/sections/Hero'))
 const About = lazy(() => import('../components/sections/About'))
 const Projects = lazy(() => import('../components/sections/Projects'))
 const Skills = lazy(() => import('../components/sections/Skills'))
@@ -117,9 +117,7 @@ const Home = () => {
                     title={portfolioData.hero?.title}
                     description={portfolioData.hero?.subtitle}
                 />
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-paper dark:bg-paper-dark"><div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                    <Hero data={portfolioData.hero} />
-                </Suspense>
+                <Hero data={portfolioData.hero} />
             </section>
 
             {/* About Section */}
