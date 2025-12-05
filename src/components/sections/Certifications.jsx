@@ -20,28 +20,32 @@ const Certifications = ({ data }) => {
     setExpandedCert(null)
   }
 
-  // If no certifications available, hide the section
   if (!data || data.length === 0) return null
 
   return (
-    <section ref={ref} className="section-padding bg-white dark:bg-gray-900">
-      <div className="container-max">
+    <section id="certifications" ref={ref} className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+      {/* Warm Gradient Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#E6C2A3]/10 via-transparent to-transparent dark:from-[#1e293b]/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[#D4A373]/6 via-transparent to-transparent dark:from-[#D4A373]/5" />
+      </div>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          className="text-center mb-10 sm:mb-16 md:mb-24"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Certifications
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-7xl text-ink dark:text-ink-dark mb-4 sm:mb-6">
+            My <span className="text-accent dark:text-accent-dark">Certifications.</span>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Professional certifications and credentials
+          <p className="font-sans text-ink/60 dark:text-ink-dark/60 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-2">
+            Professional credentials and achievements.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data.map((certification, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          {data.map((certification) => (
             <UnifiedCard
               key={certification._id}
               data={certification}
@@ -52,7 +56,6 @@ const Certifications = ({ data }) => {
           ))}
         </div>
 
-        {/* Expanded Modal */}
         <UnifiedModal
           data={data.find(cert => cert._id === expandedCert)}
           type="certificate"

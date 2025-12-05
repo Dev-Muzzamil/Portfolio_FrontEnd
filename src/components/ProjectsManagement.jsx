@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, RefreshCw, ExternalLink, Github, Eye, Filter } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, RefreshCw, ExternalLink, Github, Eye, EyeOff, FileText, Link, Download, Upload, FolderOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
@@ -19,6 +19,7 @@ const ProjectsManagement = () => {
     description: '',
     longDescription: '',
     technologies: [],
+    featuredTechnologies: [],
     githubUrls: [],
     liveUrls: [],
     screenshots: [],
@@ -36,9 +37,16 @@ const ProjectsManagement = () => {
   })
   const formRef = useRef(null)
   const uploadInputRef = useRef(null)
-  const [categoryOptions, setCategoryOptions] = useState(['academic','personal','work'])
+  const reportFileInputRef = useRef(null)
+  const projectFileInputRef = useRef(null)
+  const [categoryOptions, setCategoryOptions] = useState(['academic', 'personal', 'work'])
   const [newCategoryName, setNewCategoryName] = useState('')
   const [refreshing, setRefreshing] = useState({})
+  const [uploadingReport, setUploadingReport] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [expandedTechs, setExpandedTechs] = useState({})
+  const [newReport, setNewReport] = useState({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
+  const [showAddReport, setShowAddReport] = useState(false)
 
   const subcategoryOptions = ['web', 'mobile', 'ai-ml-dl', 'cloud', 'desktop', 'other']
   const academicTypes = ['University', 'College', 'Institute', 'School']
@@ -124,7 +132,7 @@ const ProjectsManagement = () => {
             const iso = `${y}-01-01`
             return { date: iso, label: y, precision: 'year' }
           }
-        } catch (_) {}
+        } catch (_) { /* ignore */ }
         return { date: val, label: undefined, precision }
       }
 
@@ -227,28 +235,31 @@ const ProjectsManagement = () => {
 
   const handleEdit = (project) => {
     setEditingProject(project)
+    setShowAddReport(false)
+    setNewReport({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
     setFormData({
       title: project.title,
       description: project.description,
       longDescription: project.longDescription || '',
       technologies: project.technologies || [],
+      featuredTechnologies: project.featuredTechnologies || [],
       githubUrls: project.githubUrls || (project.githubUrl ? [project.githubUrl] : []),
       liveUrls: project.liveUrls || (project.liveUrl ? [project.liveUrl] : []),
       screenshots: project.screenshots || [],
       featured: project.featured || false,
-        category: project.category || 'personal',
-        subcategories: project.subcategories || [],
-        academicScale: project.academicScale || '',
-        linkedInstitutes: project.linkedInstitutes || [],
+      category: project.category || 'personal',
+      subcategories: project.subcategories || [],
+      academicScale: project.academicScale || '',
+      linkedInstitutes: project.linkedInstitutes || [],
       tags: project.tags || [],
       // respect precision if present and keep value format compatible with input type
-      startDate: project.startPrecision === 'month' && project.startDate ? String(project.startDate).slice(0,7)
-        : project.startPrecision === 'year' && project.startDate ? String(project.startDate).slice(0,4)
-        : project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
+      startDate: project.startPrecision === 'month' && project.startDate ? String(project.startDate).slice(0, 7)
+        : project.startPrecision === 'year' && project.startDate ? String(project.startDate).slice(0, 4)
+          : project.startDate ? String(project.startDate).slice(0, 10) : '',
+      endDate: project.endPrecision === 'month' && project.endDate ? String(project.endDate).slice(0, 7)
+        : project.endPrecision === 'year' && project.endDate ? String(project.endDate).slice(0, 4)
+          : project.endDate ? String(project.endDate).slice(0, 10) : '',
       startPrecision: project.startPrecision || 'date',
-      endDate: project.endPrecision === 'month' && project.endDate ? String(project.endDate).slice(0,7)
-        : project.endPrecision === 'year' && project.endDate ? String(project.endDate).slice(0,4)
-        : project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : '',
       endPrecision: project.endPrecision || 'date',
       isCurrent: project.isCurrent || false,
       isActive: project.isActive !== false,
@@ -257,29 +268,7 @@ const ProjectsManagement = () => {
     setIsCreating(true)
   }
 
-  const handleDelete = async (projectId) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) {
-      return
-    }
-
-    try {
-      await api.delete(`/projects/${projectId}`)
-      toast.success('Project deleted successfully')
-      fetchProjects()
-    } catch (error) {
-      console.error('Delete project error:', error)
-      toast.error('Failed to delete project')
-    }
-  }
-
   const refreshProject = async (projectId, onlyChanged = false) => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      toast.error('Please log in to refresh screenshots')
-      // Redirect to admin login
-      try { window.location.href = '/admin' } catch {}
-      return
-    }
     setRefreshing(prev => ({ ...prev, [projectId]: true }))
     try {
       // Use admin route explicitly
@@ -295,12 +284,37 @@ const ProjectsManagement = () => {
     }
   }
 
+  const handleToggleActive = async (project) => {
+    try {
+      const updatedProject = { ...project, isActive: !project.isActive }
+      await api.put(`/projects/${project._id}`, updatedProject)
+      toast.success(`Project ${updatedProject.isActive ? 'visible' : 'hidden'}`)
+      fetchProjects()
+    } catch (error) {
+      console.error('Toggle active error:', error)
+      toast.error('Failed to update project status')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this project?')) return
+    try {
+      await api.delete(`/projects/${id}`)
+      toast.success('Project deleted successfully')
+      fetchProjects()
+    } catch (error) {
+      console.error('Delete project error:', error)
+      toast.error('Failed to delete project')
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       title: '',
       description: '',
       longDescription: '',
       technologies: [],
+      featuredTechnologies: [],
       githubUrls: [],
       liveUrls: [],
       screenshots: [],
@@ -312,7 +326,7 @@ const ProjectsManagement = () => {
       startPrecision: 'date',
       endDate: '',
       endPrecision: 'date',
-    isCurrent: false,
+      isCurrent: false,
       isActive: true,
       order: 0
     })
@@ -321,6 +335,8 @@ const ProjectsManagement = () => {
   const cancelEdit = () => {
     setIsCreating(false)
     setEditingProject(null)
+    setShowAddReport(false)
+    setNewReport({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
     resetForm()
   }
 
@@ -351,7 +367,7 @@ const ProjectsManagement = () => {
             newVal = `${String(curVal)}-01-01`
           }
         }
-      } catch (_) {}
+      } catch (_) { /* ignore */ }
       const precisionField = which === 'startDate' ? 'startPrecision' : 'endPrecision'
       return { ...prev, [which]: newVal, [precisionField]: newPrecision }
     })
@@ -745,6 +761,76 @@ const ProjectsManagement = () => {
               </div>
             </div>
 
+            {/* Featured Technologies - Drag and Drop */}
+            {(formData.technologies || []).length > 0 && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Featured Technologies (shown on card preview)
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Click technologies to add/remove from card preview. First 3 featured will be shown. If none selected, first 3 from all technologies will be shown.
+                </p>
+                <div className="space-y-3">
+                  {/* Featured (Selected) */}
+                  <div>
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">On Card ({(formData.featuredTechnologies || []).length}/3)</span>
+                    <div className="flex flex-wrap gap-2 mt-2 min-h-[40px] p-2 border-2 border-dashed border-green-300 dark:border-green-700 rounded-lg bg-green-50/50 dark:bg-green-900/20">
+                      {(formData.featuredTechnologies || []).length === 0 ? (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 italic">Click technologies below to add them</span>
+                      ) : (
+                        (formData.featuredTechnologies || []).map((tech, i) => (
+                          <button
+                            key={`featured-${i}`}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                featuredTechnologies: (prev.featuredTechnologies || []).filter(t => t !== tech)
+                              }))
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded-full bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 border border-green-300 dark:border-green-600 hover:bg-red-100 dark:hover:bg-red-800 hover:text-red-800 dark:hover:text-red-100 hover:border-red-300 dark:hover:border-red-600 transition-colors cursor-pointer"
+                            title="Click to remove from featured"
+                          >
+                            {tech} ✕
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  {/* Available (Not Selected) */}
+                  <div>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Available</span>
+                    <div className="flex flex-wrap gap-2 mt-2 min-h-[40px] p-2 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      {(formData.technologies || []).filter(tech => !(formData.featuredTechnologies || []).includes(tech)).length === 0 ? (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 italic">All technologies are featured</span>
+                      ) : (
+                        (formData.technologies || []).filter(tech => !(formData.featuredTechnologies || []).includes(tech)).map((tech, i) => (
+                          <button
+                            key={`available-${i}`}
+                            type="button"
+                            onClick={() => {
+                              if ((formData.featuredTechnologies || []).length >= 3) {
+                                toast('Maximum 3 featured technologies allowed', { icon: '⚠️' })
+                                return
+                              }
+                              setFormData(prev => ({
+                                ...prev,
+                                featuredTechnologies: [...(prev.featuredTechnologies || []), tech]
+                              }))
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-green-100 dark:hover:bg-green-800 hover:text-green-800 dark:hover:text-green-100 hover:border-green-300 dark:hover:border-green-600 transition-colors cursor-pointer"
+                            title="Click to add to featured"
+                          >
+                            {tech} +
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* URLs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -849,7 +935,7 @@ const ProjectsManagement = () => {
                   </div>
                 ) : null
               ))}
-              <p className="text-xs text-gray-500 mt-2">Project cards no longer show live/preview tags — use the project modal to see live previews. Use the "Ongoing / Present" checkbox to mark projects that are still active.</p>
+              <p className="text-xs text-gray-500 mt-2">Project cards no longer show live/preview tags — use the project modal to see live previews. Use the &quot;Ongoing / Present&quot; checkbox to mark projects that are still active.</p>
             </div>
 
             {/* Tags */}
@@ -886,6 +972,418 @@ const ProjectsManagement = () => {
                 </button>
               </div>
             </div>
+
+            {/* Reports Section - Only show when editing an existing project */}
+            {editingProject && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FileText className="w-5 h-5" />
+                    Reports & Documentation
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddReport(true)}
+                    className="btn-secondary flex items-center text-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Report
+                  </button>
+                </div>
+
+                {/* Existing Reports */}
+                {editingProject.reports && editingProject.reports.length > 0 ? (
+                  <div className="space-y-3 mb-4">
+                    {editingProject.reports.map((report) => (
+                      <div key={report._id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center gap-3">
+                          {report.type === 'file' ? (
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <Link className="w-5 h-5 text-green-600" />
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">{report.title}</p>
+                            {report.description && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{report.description}</p>
+                            )}
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {report.type === 'file' && report.file?.originalName ? report.file.originalName : ''}
+                              {report.type === 'link' && report.link?.url ? report.link.url : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {report.type === 'file' && report.file?.url && (
+                            <a
+                              href={report.file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-blue-600 hover:text-blue-700"
+                              title="Download"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                          )}
+                          {report.type === 'link' && report.link?.url && (
+                            <a
+                              href={report.link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-green-600 hover:text-green-700"
+                              title="Open link"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm('Delete this report?')) return
+                              try {
+                                await api.delete(`/projects/${editingProject._id}/reports/${report._id}`)
+                                toast.success('Report deleted')
+                                // Refresh the project data
+                                const res = await api.get(`/projects/${editingProject._id}`)
+                                setEditingProject(res.data.project)
+                              } catch (err) {
+                                console.error('Delete report error:', err)
+                                toast.error(err?.response?.data?.message || 'Failed to delete report')
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:text-red-700"
+                            title="Delete report"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">No reports added yet. Add project documentation, papers, or external links.</p>
+                )}
+
+                {/* Add Report Form */}
+                {showAddReport && (
+                  <div className="p-4 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Report Title *</label>
+                        <input
+                          type="text"
+                          value={newReport.title}
+                          onChange={(e) => setNewReport(prev => ({ ...prev, title: e.target.value }))}
+                          className="input-field"
+                          placeholder="e.g., Project Report, Documentation"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Type</label>
+                        <select
+                          value={newReport.type}
+                          onChange={(e) => setNewReport(prev => ({ ...prev, type: e.target.value }))}
+                          className="input-field"
+                        >
+                          <option value="file">Upload File</option>
+                          <option value="link">External Link</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Description</label>
+                      <input
+                        type="text"
+                        value={newReport.description}
+                        onChange={(e) => setNewReport(prev => ({ ...prev, description: e.target.value }))}
+                        className="input-field"
+                        placeholder="Brief description of the report"
+                      />
+                    </div>
+
+                    {newReport.type === 'link' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Link URL *</label>
+                          <input
+                            type="url"
+                            value={newReport.link.url}
+                            onChange={(e) => setNewReport(prev => ({ ...prev, link: { ...prev.link, url: e.target.value } }))}
+                            className="input-field"
+                            placeholder="https://drive.google.com/..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Platform</label>
+                          <input
+                            type="text"
+                            value={newReport.link.platform}
+                            onChange={(e) => setNewReport(prev => ({ ...prev, link: { ...prev.link, platform: e.target.value } }))}
+                            className="input-field"
+                            placeholder="Google Drive, Dropbox..."
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {newReport.type === 'file' && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Upload File</label>
+                        <input
+                          ref={reportFileInputRef}
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.zip,.rar,.7z,image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            if (!newReport.title.trim()) {
+                              toast.error('Please enter a report title first')
+                              return
+                            }
+                            setUploadingReport(true)
+                            try {
+                              const fd = new FormData()
+                              fd.append('file', file)
+                              const res = await api.post('/upload/projects/file', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+                              
+                              // Add the report with the uploaded file
+                              await api.post(`/projects/${editingProject._id}/reports`, {
+                                title: newReport.title,
+                                description: newReport.description,
+                                type: 'file',
+                                file: {
+                                  url: res.data.url,
+                                  publicId: res.data.publicId,
+                                  originalName: res.data.originalName,
+                                  mimeType: res.data.mimeType,
+                                  size: res.data.size
+                                },
+                                visible: true
+                              })
+
+                              toast.success('Report added successfully')
+                              setNewReport({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
+                              setShowAddReport(false)
+                              
+                              // Refresh the project data
+                              const projRes = await api.get(`/projects/${editingProject._id}`)
+                              setEditingProject(projRes.data.project)
+                            } catch (err) {
+                              console.error('Upload report error:', err)
+                              toast.error(err?.response?.data?.message || 'Failed to upload report')
+                            } finally {
+                              setUploadingReport(false)
+                              if (reportFileInputRef.current) reportFileInputRef.current.value = ''
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => reportFileInputRef.current?.click()}
+                          disabled={uploadingReport}
+                          className="btn-secondary flex items-center"
+                        >
+                          {uploadingReport ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 mr-2" />
+                              Choose File
+                            </>
+                          )}
+                        </button>
+                        <p className="text-xs text-gray-500 mt-1">Supported: PDF, Word, Excel, PowerPoint, images, archives (max 25MB)</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddReport(false)
+                          setNewReport({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
+                        }}
+                        className="btn-secondary"
+                      >
+                        Cancel
+                      </button>
+                      {newReport.type === 'link' && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!newReport.title.trim()) {
+                              toast.error('Report title is required')
+                              return
+                            }
+                            if (!newReport.link.url.trim()) {
+                              toast.error('Link URL is required')
+                              return
+                            }
+                            try {
+                              await api.post(`/projects/${editingProject._id}/reports`, {
+                                title: newReport.title,
+                                description: newReport.description,
+                                type: 'link',
+                                link: {
+                                  url: newReport.link.url,
+                                  platform: newReport.link.platform,
+                                  title: newReport.link.title || newReport.title
+                                },
+                                visible: true
+                              })
+                              toast.success('Report link added')
+                              setNewReport({ title: '', description: '', type: 'file', link: { url: '', platform: '', title: '' } })
+                              setShowAddReport(false)
+                              
+                              // Refresh the project data
+                              const projRes = await api.get(`/projects/${editingProject._id}`)
+                              setEditingProject(projRes.data.project)
+                            } catch (err) {
+                              console.error('Add report link error:', err)
+                              toast.error(err?.response?.data?.message || 'Failed to add report')
+                            }
+                          }}
+                          className="btn-primary"
+                        >
+                          Add Link
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Project Files Section - Only show when editing an existing project */}
+            {editingProject && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FolderOpen className="w-5 h-5" />
+                    Project Files
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      ref={projectFileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.json,.xml,.zip,.rar,.7z,image/*"
+                      multiple
+                      className="hidden"
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || [])
+                        if (!files.length) return
+                        setUploadingFile(true)
+                        try {
+                          for (const file of files) {
+                            const fd = new FormData()
+                            fd.append('file', file)
+                            const res = await api.post('/upload/projects/file', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+                            
+                            // Add the file to the project
+                            await api.post(`/projects/${editingProject._id}/files`, {
+                              url: res.data.url,
+                              publicId: res.data.publicId,
+                              originalName: res.data.originalName,
+                              mimeType: res.data.mimeType,
+                              size: res.data.size,
+                              category: 'general'
+                            })
+                          }
+                          toast.success(`${files.length} file(s) uploaded`)
+                          
+                          // Refresh the project data
+                          const projRes = await api.get(`/projects/${editingProject._id}`)
+                          setEditingProject(projRes.data.project)
+                        } catch (err) {
+                          console.error('Upload files error:', err)
+                          toast.error(err?.response?.data?.message || 'Failed to upload files')
+                        } finally {
+                          setUploadingFile(false)
+                          if (projectFileInputRef.current) projectFileInputRef.current.value = ''
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => projectFileInputRef.current?.click()}
+                      disabled={uploadingFile}
+                      className="btn-secondary flex items-center text-sm"
+                    >
+                      {uploadingFile ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-1" />
+                          Upload Files
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Existing Files */}
+                {editingProject.files && editingProject.files.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {editingProject.files.map((file) => (
+                      <div key={file._id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-white text-sm truncate" title={file.originalName}>
+                              {file.originalName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Unknown size'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-blue-600 hover:text-blue-700"
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm('Delete this file?')) return
+                              try {
+                                await api.delete(`/projects/${editingProject._id}/files/${file._id}`)
+                                toast.success('File deleted')
+                                // Refresh the project data
+                                const res = await api.get(`/projects/${editingProject._id}`)
+                                setEditingProject(res.data.project)
+                              } catch (err) {
+                                console.error('Delete file error:', err)
+                                toast.error(err?.response?.data?.message || 'Failed to delete file')
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:text-red-700"
+                            title="Delete file"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No files added yet. Upload project-related files like source code, diagrams, or resources.</p>
+                )}
+                <p className="text-xs text-gray-500 mt-3">Supported: PDF, Word, Excel, PowerPoint, images, JSON, XML, archives (max 25MB each)</p>
+              </div>
+            )}
 
             {/* Dates with precision */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1014,23 +1512,23 @@ const ProjectsManagement = () => {
                           {project.academicScale === 'mini' ? 'Mini' : 'Major'}
                         </span>
                       )}
-                        {project.subcategories && project.subcategories.length > 0 && project.subcategories.map((sub) => (
-                          <span key={sub} className={`px-2 py-1 text-xs rounded-md ${getCategoryColor(sub)} ml-2`}>{sub === 'ai-ml-dl' ? 'AI/ML/DL' : sub.charAt(0).toUpperCase() + sub.slice(1)}</span>
-                        ))}
-                        {project.linkedInstitutes && project.linkedInstitutes.length > 0 && (
-                          <div className="flex items-center gap-2 ml-2">
-                            {project.linkedInstitutes.map((li) => {
-                              // resolve id -> name where possible
-                              const inst = institutes.find(i => i._id === li) || institutes.find(i => (i.name || '').toLowerCase().trim() === String(li).toLowerCase().trim())
-                              const label = inst ? inst.name : li
-                              return (
-                                <span key={String(li)} className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                                  {label}
-                                </span>
-                              )
-                            })}
-                          </div>
-                        )}
+                      {project.subcategories && project.subcategories.length > 0 && project.subcategories.map((sub) => (
+                        <span key={sub} className={`px-2 py-1 text-xs rounded-md ${getCategoryColor(sub)} ml-2`}>{sub === 'ai-ml-dl' ? 'AI/ML/DL' : sub.charAt(0).toUpperCase() + sub.slice(1)}</span>
+                      ))}
+                      {project.linkedInstitutes && project.linkedInstitutes.length > 0 && (
+                        <div className="flex items-center gap-2 ml-2">
+                          {project.linkedInstitutes.map((li) => {
+                            // resolve id -> name where possible
+                            const inst = institutes.find(i => i._id === li) || institutes.find(i => (i.name || '').toLowerCase().trim() === String(li).toLowerCase().trim())
+                            const label = inst ? inst.name : li
+                            return (
+                              <span key={String(li)} className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                {label}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
@@ -1038,8 +1536,8 @@ const ProjectsManagement = () => {
                     </p>
 
                     {project.technologies && project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {project.technologies.slice(0, 5).map((tech, index) => (
+                      <div className="flex flex-wrap gap-2 mb-3 items-center">
+                        {((expandedTechs[project._id]) ? project.technologies : project.technologies.slice(0, 5)).map((tech, index) => (
                           <span
                             key={index}
                             className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md"
@@ -1048,9 +1546,19 @@ const ProjectsManagement = () => {
                           </span>
                         ))}
                         {project.technologies.length > 5 && (
-                          <span className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">
-                            +{project.technologies.length - 5} more
-                          </span>
+                          (() => {
+                            const remaining = project.technologies.length - 5
+                            const isExpanded = !!expandedTechs[project._id]
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedTechs(prev => ({ ...prev, [project._id]: !prev[project._id] }))}
+                                className="btn-secondary h-7 px-2 text-xs"
+                              >
+                                {isExpanded ? 'Show less' : `+${remaining} more`}
+                              </button>
+                            )
+                          })()
                         )}
                       </div>
                     )}
@@ -1093,40 +1601,47 @@ const ProjectsManagement = () => {
                       ) : null}
                     </div>
 
-                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                        <span>
-                          Preview: {project.screenshotUpdatedAt ? new Date(project.screenshotUpdatedAt).toLocaleString() : 'never'}
-                        </span>
-                        {((project.liveUrls && project.liveUrls.length) || project.liveUrl) ? (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => refreshProject(project._id, false)}
-                              disabled={!!refreshing[project._id]}
-                              className="btn-secondary flex items-center h-7 px-2"
-                              title="Capture a fresh screenshot now"
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-1 ${refreshing[project._id] ? 'animate-spin' : ''}`} />
-                              Now
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => refreshProject(project._id, true)}
-                              disabled={!!refreshing[project._id]}
-                              className="btn-secondary flex items-center h-7 px-2"
-                              title="Refresh only if site changed (ETag/Last-Modified)"
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-1 ${refreshing[project._id] ? 'animate-spin' : ''}`} />
-                              If changed
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="italic">No live URL</span>
-                        )}
-                      </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                      <span>
+                        Preview: {project.screenshotUpdatedAt ? new Date(project.screenshotUpdatedAt).toLocaleString() : 'never'}
+                      </span>
+                      {((project.liveUrls && project.liveUrls.length) || project.liveUrl) ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => refreshProject(project._id, false)}
+                            disabled={!!refreshing[project._id]}
+                            className="btn-secondary flex items-center h-7 px-2"
+                            title="Capture a fresh screenshot now"
+                          >
+                            <RefreshCw className={`w-4 h-4 mr-1 ${refreshing[project._id] ? 'animate-spin' : ''}`} />
+                            Now
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => refreshProject(project._id, true)}
+                            disabled={!!refreshing[project._id]}
+                            className="btn-secondary flex items-center h-7 px-2"
+                            title="Refresh only if site changed (ETag/Last-Modified)"
+                          >
+                            <RefreshCw className={`w-4 h-4 mr-1 ${refreshing[project._id] ? 'animate-spin' : ''}`} />
+                            If changed
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="italic">No live URL</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => handleToggleActive(project)}
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      title={project.isActive ? 'Hide project' : 'Show project'}
+                    >
+                      {project.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </button>
                     <button
                       onClick={() => handleEdit(project)}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"

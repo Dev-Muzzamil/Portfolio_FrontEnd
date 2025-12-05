@@ -1,202 +1,187 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X, Moon, Sun } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('home')
-  const [isScrolled, setIsScrolled] = useState(false)
-  const { darkMode, toggleTheme } = useTheme()
-  const [siteSettings, setSiteSettings] = useState(window.__SITE_SETTINGS__ || {})
+    const [isOpen, setIsOpen] = useState(false)
+    const [activeSection, setActiveSection] = useState('home')
+    const [isVisible, setIsVisible] = useState(true)
+    const lastScrollY = useRef(0)
+    const { darkMode, toggleTheme } = useTheme()
+    const [siteSettings, setSiteSettings] = useState(window.__SITE_SETTINGS__ || {})
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    setIsAuthenticated(false)
-  }
+    const navLinks = [
+        { name: 'Home', href: '#home' },
+        { name: 'About', href: '#about' },
+        { name: 'Experience', href: '#experience-education' },
+        { name: 'Projects', href: '#projects' },
+        { name: 'Skills', href: '#skills' },
+        { name: 'Certifications', href: '#certifications' },
+        { name: 'Contact', href: '#contact' },
+    ]
 
-  const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'About', href: '#about' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Skills', href: '#skills' },
-    { name: 'Certifications', href: '#certifications' },
-    { name: 'Contact', href: '#contact' },
-  ]
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY
 
-  // Handle scroll effects and active section detection
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      setIsScrolled(scrollY > 50)
+            // Show/Hide logic based on scroll direction and threshold
+            if (currentScrollY > 120) {
+                if (currentScrollY > lastScrollY.current) {
+                    setIsVisible(false) // Scrolling down
+                } else {
+                    setIsVisible(true) // Scrolling up
+                }
+            } else {
+                setIsVisible(true) // At top
+            }
+            lastScrollY.current = currentScrollY
 
-      // Detect active section
-      const sections = navLinks.map(link => link.href.substring(1))
-      const currentSection = sections.find(section => {
-        const element = document.getElementById(section)
-        if (element) {
-          const rect = element.getBoundingClientRect()
-          return rect.top <= 100 && rect.bottom >= 100
+            // Detect active section
+            const sections = navLinks.map(link => link.href.substring(1))
+            const currentSection = sections.find(section => {
+                const element = document.getElementById(section)
+                if (element) {
+                    const rect = element.getBoundingClientRect()
+                    return rect.top <= 100 && rect.bottom >= 100
+                }
+                return false
+            })
+
+            if (currentSection) {
+                setActiveSection(currentSection)
+            }
         }
-        return false
-      })
 
-      if (currentSection) {
-        setActiveSection(currentSection)
-      }
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    useEffect(() => {
+        const onUpdate = (e) => setSiteSettings(window.__SITE_SETTINGS__ || e?.detail || {})
+        window.addEventListener('site-settings-updated', onUpdate)
+        return () => window.removeEventListener('site-settings-updated', onUpdate)
+    }, [])
+
+    const scrollToSection = (href) => {
+        const element = document.querySelector(href)
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' })
+        }
+        setIsOpen(false)
     }
 
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // Initial check
-
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const onUpdate = (e) => setSiteSettings(window.__SITE_SETTINGS__ || e?.detail || {})
-    window.addEventListener('site-settings-updated', onUpdate)
-    return () => window.removeEventListener('site-settings-updated', onUpdate)
-  }, [])
-
-  // Smooth scroll to section
-  const scrollToSection = (href) => {
-    const element = document.querySelector(href)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-    setIsOpen(false)
-  }
-
-  return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      isScrolled
-        ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-lg border-b border-gray-200/50 dark:border-gray-700/50'
-        : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700'
-    }`}>
-      <div className="container-max">
-        <div className="flex justify-between items-center h-12 sm:h-14 md:h-16 lg:h-20 tv:h-24">
-          {/* Logo with animation */}
-          <Link
-            to="/"
-            className="flex items-center gap-2"
-          >
-            {siteSettings?.site?.logoUrl ? (
-              <img src={siteSettings.site.logoUrl} alt={siteSettings.site.title || 'Logo'} className="w-12 h-12 md:w-16 md:h-16 object-contain mr-3" />
-            ) : (
-              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl tv:text-5xl font-bold text-primary-600 dark:text-primary-400 transition-all duration-300 hover:scale-105 hover:text-primary-500 dark:hover:text-primary-300 relative group">
-                Portfolio
-              </span>
-            )}
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-500 dark:bg-primary-400 group-hover:w-full transition-all duration-300"></span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.href.substring(1)
-              return (
-                <button
-                  key={link.name}
-                  onClick={() => scrollToSection(link.href)}
-                  className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 group ${
-                    isActive
-                      ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                  }`}
-                >
-                  {link.name}
-                  {/* Active indicator */}
-                  <span className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-primary-500 dark:bg-primary-400 transition-all duration-300 ${
-                    isActive ? 'w-3/4' : 'group-hover:w-1/2'
-                  }`}></span>
-                  {/* Hover glow effect */}
-                  <span className="absolute inset-0 rounded-lg bg-primary-500/10 dark:bg-primary-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Right side actions */}
-          <div className="flex items-center space-x-3">
-            {/* Theme toggle with enhanced animation */}
-            <button
-              onClick={toggleTheme}
-              className="relative p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 hover:scale-110 group overflow-hidden"
-              aria-label="Toggle theme"
+    return (
+        <>
+            <motion.nav
+                initial={{ y: -100, opacity: 0 }}
+                animate={{
+                    y: isVisible ? 0 : -100,
+                    opacity: isVisible ? 1 : 0
+                }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                     className={
+                     `fixed z-40 left-1/2 transform -translate-x-1/2
+                         top-4 sm:top-6 md:top-8
+                         w-fit max-w-[95vw] sm:max-w-[90vw] px-3 sm:px-4 md:px-6 py-2 sm:py-3
+                         bg-paper/95 dark:bg-paper-dark/95 sm:bg-paper/80 sm:dark:bg-paper-dark/90 backdrop-blur-md
+                         border border-ink/20 dark:border-white/10 sm:border-ink/10 sm:dark:border-white/10
+                         rounded-full shadow-lg dark:shadow-strong-dark
+                         focus:outline-none focus:ring-2 focus:ring-accent/20
+                         flex items-center justify-between gap-3 sm:gap-4 md:gap-8`
+                     }
             >
-              {/* Ripple effect background */}
-              <span className="absolute inset-0 bg-primary-500/20 dark:bg-primary-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              <div className="relative z-10 transition-transform duration-300 group-hover:rotate-12">
-                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </div>
-            </button>
+                {/* Logo */}
+                <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+                    {siteSettings?.site?.logoUrl ? (
+                        <img
+                            src={siteSettings.site.logoUrl}
+                            alt={siteSettings.site.title || 'Logo'}
+                            className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain grayscale hover:grayscale-0 transition-all duration-500 dark:invert"
+                        />
+                    ) : (
+                        <span className="font-serif font-bold text-base sm:text-lg text-ink dark:text-ink-dark tracking-tight">
+                            {siteSettings?.site?.title || 'SMA'}
+                        </span>
+                    )}
+                </Link>
 
-            {/* Admin/Auth button with enhanced styling */}
-            {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="relative btn-secondary text-sm overflow-hidden group hover:scale-105 transition-all duration-300"
-              >
-                <span className="relative z-10">Logout</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </button>
-            ) : (
-              <Link
-                to="/admin"
-                className="relative btn-primary text-sm overflow-hidden group hover:scale-105 transition-all duration-300"
-              >
-                <span className="relative z-10">Admin</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </Link>
-            )}
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center gap-0.5 lg:gap-1">
+                    {navLinks.map((link) => {
+                        const isActive = activeSection === link.href.substring(1)
+                        return (
+                            <button
+                                key={link.name}
+                                onClick={() => scrollToSection(link.href)}
+                                className={`px-2 lg:px-3 py-1 rounded-full text-[10px] lg:text-xs font-bold uppercase tracking-widest transition-all duration-300 ${isActive
+                                    ? 'text-accent dark:text-accent-dark bg-ink/5 dark:bg-white/10'
+                                    : 'text-gray dark:text-gray-dark hover:text-ink dark:hover:text-ink-dark hover:bg-ink/5 dark:hover:bg-white/10'
+                                    }`}
+                            >
+                                {link.name}
+                            </button>
+                        )
+                    })}
+                </div>
 
-            {/* Mobile menu button with animation */}
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden relative p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 hover:scale-110 group overflow-hidden"
-              aria-label="Toggle menu"
-            >
-              {/* Ripple effect */}
-              <span className="absolute inset-0 bg-primary-500/20 dark:bg-primary-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              <div className="relative z-10 transition-all duration-300 group-hover:rotate-90">
-                {isOpen ? <X size={20} /> : <Menu size={20} />}
-              </div>
-            </button>
-          </div>
-        </div>
+                {/* Actions */}
+                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+                    <button
+                        onClick={toggleTheme}
+                        className="text-gray dark:text-gray-dark hover:text-accent dark:hover:text-accent-dark transition-colors p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-accent/20"
+                        aria-label="Toggle theme"
+                    >
+                        {darkMode ? <Sun size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Moon size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                    </button>
 
-        {/* Mobile Navigation with slide animation */}
-        <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${
-          isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-          <div className="py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col space-y-2">
-              {navLinks.map((link, index) => {
-                const isActive = activeSection === link.href.substring(1)
-                return (
-                  <button
-                    key={link.name}
-                    onClick={() => scrollToSection(link.href)}
-                    className={`text-left px-4 py-3 rounded-lg font-medium transition-all duration-300 transform hover:translate-x-2 ${
-                      isActive
-                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                    }`}
-                    style={{
-                      animationDelay: isOpen ? `${index * 100}ms` : '0ms',
-                      animation: isOpen ? 'slideInLeft 0.3s ease-out forwards' : 'none'
-                    }}
-                  >
-                    {link.name}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-  )
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="md:hidden text-ink dark:text-ink-dark p-2 rounded-md hover:bg-ink/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                        aria-label="Toggle menu"
+                    >
+                        {isOpen ? <X size={18} className="sm:w-5 sm:h-5" /> : <Menu size={18} className="sm:w-5 sm:h-5" />}
+                    </button>
+                </div>
+            </motion.nav>
+
+            {/* Mobile Navigation Overlay */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed inset-0 bg-paper/95 dark:bg-paper-dark/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center md:hidden"
+                    >
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 text-ink dark:text-ink-dark p-2"
+                        >
+                            <X size={28} className="sm:w-8 sm:h-8" />
+                        </button>
+
+                        <div className="flex flex-col space-y-5 sm:space-y-6 md:space-y-8 text-center">
+                            {navLinks.map((link, index) => (
+                                <motion.button
+                                    key={link.name}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    onClick={() => scrollToSection(link.href)}
+                                    className="font-serif text-2xl sm:text-3xl md:text-4xl text-ink dark:text-ink-dark hover:text-accent dark:hover:text-accent-dark transition-colors"
+                                >
+                                    {link.name}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
+    )
 }
 
 export default Navbar

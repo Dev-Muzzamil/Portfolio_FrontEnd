@@ -3,199 +3,217 @@ import { motion } from 'framer-motion'
 import { api } from '../services/api'
 import { normalizeSocial } from '../utils/social'
 import ErrorBoundary from '../components/ErrorBoundary'
+import SEO from '../components/SEO'
+import LazySection from '../components/LazySection'
+import Hero from '../components/sections/Hero'
 
 // Lazy load components
-const Hero = lazy(() => import('../components/sections/Hero'))
 const About = lazy(() => import('../components/sections/About'))
 const Projects = lazy(() => import('../components/sections/Projects'))
 const Skills = lazy(() => import('../components/sections/Skills'))
 const Certifications = lazy(() => import('../components/sections/Certifications'))
 const Contact = lazy(() => import('../components/sections/Contact'))
+const Education = lazy(() => import('../components/sections/Education'))
+const Experience = lazy(() => import('../components/sections/Experience'))
 const GithubSection = lazy(() => import('../components/GithubSection'))
-// Removed standalone Education section per request
 
 const Home = () => {
-  const [portfolioData, setPortfolioData] = useState({
-    hero: null,
-    about: {},
-    projects: [],
-    skills: [],
-    resumes: [],
-    certifications: []
-  })
-  const [loading, setLoading] = useState(true)
+    const [portfolioData, setPortfolioData] = useState({
+        hero: null,
+        about: {},
+        projects: [],
+        skills: [],
+        resumes: [],
+        certifications: [],
+        education: [],
+        experience: []
+    })
+    const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchPortfolioData = async () => {
-      const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
+    useEffect(() => {
+        const fetchPortfolioData = async () => {
+            const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
-      const fetchWithRetry = async (path, attempts = 3, baseDelay = 500) => {
-        let lastErr
-        for (let i = 0; i < attempts; i++) {
-          try {
-            return await api.get(path)
-          } catch (err) {
-            lastErr = err
-            const status = err?.response?.status
-            // retry only on 429 (Too Many Requests)
-            if (status === 429 && i < attempts - 1) {
-              const delay = baseDelay * Math.pow(2, i) // exponential backoff
-              // small log for visibility
-              // eslint-disable-next-line no-console
-              console.warn(`Retry ${i + 1} for ${path} after ${delay}ms due to 429`)
-              // wait and retry
-              // eslint-disable-next-line no-await-in-loop
-              await sleep(delay)
-              continue
+            const fetchWithRetry = async (path, attempts = 3, baseDelay = 500) => {
+                let lastErr
+                for (let i = 0; i < attempts; i++) {
+                    try {
+                        return await api.get(path)
+                    } catch (err) {
+                        lastErr = err
+                        const status = err?.response?.status
+                        // retry only on 429 (Too Many Requests)
+                        if (status === 429 && i < attempts - 1) {
+                            const delay = baseDelay * Math.pow(2, i) // exponential backoff
+                            // small log for visibility
+
+                            console.warn(`Retry ${i + 1} for ${path} after ${delay}ms due to 429`)
+                            // wait and retry
+
+                            await sleep(delay)
+                            continue
+                        }
+                        throw err
+                    }
+                }
+                throw lastErr
             }
-            throw err
-          }
+
+            try {
+                const [heroRes, aboutRes, projectsRes, skillsRes, resumesRes, certificationsRes, educationRes, experienceRes] = await Promise.all([
+                    fetchWithRetry('/hero'),
+                    fetchWithRetry('/about'),
+                    fetchWithRetry('/projects'),
+                    fetchWithRetry('/skills'),
+                    fetchWithRetry('/resumes'),
+                    fetchWithRetry('/certifications'),
+                    fetchWithRetry('/education'),
+                    fetchWithRetry('/experience')
+                ])
+
+                const combinedAbout = { ...(aboutRes?.data?.about || {}), resumes: resumesRes?.data?.resumes || [] }
+                // Expose globally for Footer/simple consumers without prop drilling
+
+                window.__PORTFOLIO_DATA = { about: combinedAbout }
+
+                // Only expose active skills to the public sections
+                const activeSkills = (skillsRes.data.skills || []).filter(skill => skill.isActive !== false)
+
+                setPortfolioData({
+                    hero: heroRes.data.hero,
+                    about: combinedAbout,
+                    projects: projectsRes.data.projects,
+                    skills: activeSkills,
+                    resumes: resumesRes.data.resumes,
+                    certifications: certificationsRes?.data?.certifications || [],
+                    education: educationRes?.data?.education || [],
+                    experience: experienceRes?.data?.experience || []
+                })
+            } catch (error) {
+                // If requests fail (e.g., transient 429), ensure we still pass safe defaults to children
+                console.error('Error fetching portfolio data:', error)
+                setPortfolioData({ hero: null, about: {}, projects: [], skills: [], resumes: [], education: [], experience: [] })
+            } finally {
+                setLoading(false)
+            }
         }
-        throw lastErr
-      }
 
-      try {
-        const [heroRes, aboutRes, projectsRes, skillsRes, resumesRes, certificationsRes] = await Promise.all([
-          fetchWithRetry('/hero'),
-          fetchWithRetry('/about'),
-          fetchWithRetry('/projects'),
-          fetchWithRetry('/skills'),
-          fetchWithRetry('/resumes')
-          , fetchWithRetry('/certifications')
-        ])
+        fetchPortfolioData()
+    }, [])
 
-        const combinedAbout = { ...(aboutRes?.data?.about || {}), resumes: resumesRes?.data?.resumes || [] }
-        // Expose globally for Footer/simple consumers without prop drilling
-        // eslint-disable-next-line no-underscore-dangle
-        window.__PORTFOLIO_DATA = { about: combinedAbout }
-
-        // Only expose active skills to the public sections
-        const activeSkills = (skillsRes.data.skills || []).filter(skill => skill.isActive !== false)
-
-        setPortfolioData({
-          hero: heroRes.data.hero,
-          about: combinedAbout,
-          projects: projectsRes.data.projects,
-          skills: activeSkills,
-          resumes: resumesRes.data.resumes
-          , certifications: certificationsRes?.data?.certifications || []
-        })
-      } catch (error) {
-        // If requests fail (e.g., transient 429), ensure we still pass safe defaults to children
-        console.error('Error fetching portfolio data:', error)
-        setPortfolioData({ hero: null, about: {}, projects: [], skills: [], resumes: [] })
-      } finally {
-        setLoading(false)
-      }
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-paper dark:bg-paper-dark transition-colors duration-300">
+                <div className="animate-spin rounded-full h-16 w-16 sm:h-24 sm:w-24 lg:h-32 lg:w-32 border-b-2 border-ink dark:border-ink-dark"></div>
+            </div>
+        )
     }
 
-    fetchPortfolioData()
-  }, [])
-
-  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    )
-  }
+        <div className="pt-16">
+            {/* Hero Section */}
+            <section id="home">
+                <SEO
+                    title={portfolioData.hero?.title}
+                    description={portfolioData.hero?.subtitle}
+                />
+                <Hero data={portfolioData.hero} />
+            </section>
 
-  // derive github username from hero or centralized about social links
-  const deriveGithubUsername = () => {
-    // prefer explicit hero.github (may be a username or url)
-    const heroGithub = portfolioData.hero?.github
-    if (heroGithub) {
-      // if it looks like a URL, extract last path segment
-      try {
-        const u = new URL(heroGithub)
-        const parts = u.pathname.split('/').filter(Boolean)
-        if (parts.length) return parts[0]
-      } catch {
-        // not a URL, assume it's a username
-        return heroGithub
-      }
-    }
+            {/* About Section */}
+            <section id="about">
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
+                        <ErrorBoundary>
+                            <About data={portfolioData.about} />
+                        </ErrorBoundary>
+                    </Suspense>
+                </LazySection>
+            </section>
 
-    // fallback to centralized about socialLinks
-    const aboutSocial = normalizeSocial(portfolioData.about || {})
-    const gh = aboutSocial.github || aboutSocial['gh'] || aboutSocial['github.com']
-    if (gh) {
-      try {
-        const u = new URL(gh)
-        const parts = u.pathname.split('/').filter(Boolean)
-        if (parts.length) return parts[0]
-      } catch {
-        return gh
-      }
-    }
+            {/* Experience & Education Section */}
+            {(portfolioData.experience?.length > 0 || portfolioData.education?.length > 0) && (
+                <section id="experience-education" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
+                    <LazySection minHeight="80vh">
+                        {/* Warm Gradient Background */}
+                        <div className="absolute inset-0 -z-10">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E6C2A3]/8 via-transparent to-transparent dark:from-[#D4A373]/5" />
+                        </div>
+                        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20">
+                                {/* Experience Column */}
+                                {portfolioData.experience?.length > 0 && (
+                                    <div className={`${portfolioData.education?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
+                                        <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                                            <Experience data={portfolioData.experience} />
+                                        </Suspense>
+                                    </div>
+                                )}
 
-    return null
-  }
+                                {/* Education Column */}
+                                {portfolioData.education?.length > 0 && (
+                                    <div className={`${portfolioData.experience?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
+                                        <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                                            <Education data={portfolioData.education} />
+                                        </Suspense>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </LazySection>
+                </section>
+            )}
 
-  const githubUsername = deriveGithubUsername()
+            {/* Projects Section (render only if projects exist) */}
+            {portfolioData.projects && portfolioData.projects.length > 0 && (
+                <section id="projects">
+                    <LazySection minHeight="80vh">
+                        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                            <Projects data={portfolioData.projects} skills={portfolioData.skills} />
+                        </Suspense>
+                    </LazySection>
+                </section>
+            )}
 
-  return (
-    <div className="pt-16 bg-gradient-to-b from-github-50 to-white dark:from-github-900 dark:to-gray-900">
-      {/* Hero Section */}
-      <section id="home">
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600"></div></div>}>
-          <Hero data={portfolioData.hero} />
-        </Suspense>
-      </section>
+            {/* Skills Section */}
+            <section id="skills">
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <Skills data={portfolioData.skills} />
+                    </Suspense>
+                </LazySection>
+            </section>
 
-      {/* About Section */}
-      <section id="about">
-        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-          <ErrorBoundary>
-            <About data={portfolioData.about} />
-          </ErrorBoundary>
-        </Suspense>
-      </section>
+            {/* GitHub Section */}
+            <section id="github">
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <GithubSection about={portfolioData.about} />
+                    </Suspense>
+                </LazySection>
+            </section>
 
-      {/* Projects Section (render only if projects exist) */}
-      {portfolioData.projects && portfolioData.projects.length > 0 && (
-        <section id="projects">
-          <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-            <Projects data={portfolioData.projects} skills={portfolioData.skills} />
-          </Suspense>
-        </section>
-      )}
+            {/* Certifications Section (render only if certifications exist) */}
+            {portfolioData.certifications && portfolioData.certifications.length > 0 && (
+                <section id="certifications">
+                    <LazySection>
+                        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                            <Certifications data={portfolioData.certifications} />
+                        </Suspense>
+                    </LazySection>
+                </section>
+            )}
 
-      {/* Education section removed intentionally */}
-
-      {/* GitHub Section (optional) */}
-      <section id="github" className="py-8">
-        <div className="container mx-auto px-4">
-          <Suspense fallback={<div className="py-8 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-            <GithubSection username={githubUsername || undefined} />
-          </Suspense>
+            {/* Contact Section */}
+            <section id="contact">
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <Contact data={portfolioData.about} />
+                    </Suspense>
+                </LazySection>
+            </section>
         </div>
-      </section>
-
-      {/* Skills Section */}
-      <section id="skills">
-        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-          <Skills data={portfolioData.skills} />
-        </Suspense>
-      </section>
-
-      {/* Certifications Section (render only if certifications exist) */}
-      {portfolioData.certifications && portfolioData.certifications.length > 0 && (
-        <section id="certifications">
-          <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-            <Certifications data={portfolioData.certifications} />
-          </Suspense>
-        </section>
-      )}
-
-      {/* Contact Section */}
-      <section id="contact">
-        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-          <Contact data={portfolioData.about} />
-        </Suspense>
-      </section>
-    </div>
-  )
+    )
 }
 
 export default Home
