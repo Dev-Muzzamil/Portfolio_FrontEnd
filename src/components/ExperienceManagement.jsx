@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, RefreshCw, Calendar, MapPin, Eye, EyeOff } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, RefreshCw, Briefcase, Calendar, MapPin, Tags } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
@@ -149,18 +149,6 @@ const ExperienceManagement = () => {
     } catch (error) {
       console.error('Delete experience error:', error)
       toast.error('Failed to delete experience')
-    }
-  }
-
-  const handleToggleVisibility = async (exp) => {
-    try {
-      const newStatus = !exp.isActive
-      await api.put(`/experience/${exp._id}`, { isActive: newStatus })
-      toast.success(newStatus ? 'Experience is now visible' : 'Experience is now hidden')
-      fetchExperience()
-    } catch (error) {
-      console.error('Toggle visibility error:', error)
-      toast.error('Failed to update visibility')
     }
   }
 
@@ -336,15 +324,12 @@ const ExperienceManagement = () => {
               .sort((a, b) => (a.order || 0) - (b.order || 0) || new Date(b.startDate || 0) - new Date(a.startDate || 0))
               .map((exp) => {
                 return (
-                  <div key={exp._id} className={`p-6 border rounded-lg hover:shadow-md transition-shadow ${exp.isActive === false ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 opacity-60' : 'border-gray-200 dark:border-gray-700'}`}>
+                  <div key={exp._id} className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-1">
                           <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{exp.title || exp.role}</h4>
                           <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800">{exp.company || exp.organization}</span>
-                          {exp.isActive === false && (
-                            <span className="px-2 py-1 text-xs rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Hidden</span>
-                          )}
                         </div>
                         {exp.location && (
                           <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400"><MapPin className="w-4 h-4" /><span>{exp.location}</span></div>
@@ -369,9 +354,6 @@ const ExperienceManagement = () => {
                         )}
                       </div>
                       <div className="flex gap-2 ml-4">
-                        <button onClick={() => handleToggleVisibility(exp)} className={`p-2 transition-colors ${exp.isActive === false ? 'text-gray-400 hover:text-green-600 dark:hover:text-green-400' : 'text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400'}`} title={exp.isActive === false ? 'Show experience' : 'Hide experience'}>
-                          {exp.isActive === false ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
                         <button onClick={() => handleEdit(exp)} className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Edit experience">
                           <Edit className="w-4 h-4" />
                         </button>

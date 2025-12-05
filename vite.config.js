@@ -1,4 +1,3 @@
-/* eslint-env node */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -24,8 +23,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'animation-vendor': ['framer-motion'],
-          'utils-vendor': ['axios', 'date-fns']
         },
       },
     },

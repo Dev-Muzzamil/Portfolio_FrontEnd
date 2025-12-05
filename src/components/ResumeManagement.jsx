@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, RefreshCw, Upload, Download, Eye, Calendar, Star, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, RefreshCw, Upload, Download, Eye, FileText, Calendar, User, Star, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
@@ -61,7 +61,7 @@ const ResumeManagement = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-
+        
         // Validate file type
         const allowedTypes = [
           'application/pdf',
@@ -183,7 +183,7 @@ const ResumeManagement = () => {
       const response = await api.get(`/resumes/${resume._id}/download`, {
         responseType: 'blob'
       })
-
+      
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url

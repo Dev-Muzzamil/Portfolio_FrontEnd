@@ -2,7 +2,50 @@ import React, { useState, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
 
 // Utility to convert a crop area to a blob (canvas)
+const getCroppedImg = (imageSrc, crop, rotation = 0) => {
+  const createImage = (url) =>
+    new Promise((resolve, reject) => {
+      const img = new Image()
+      img.setAttribute('crossOrigin', 'anonymous')
+      img.onload = () => resolve(img)
+      img.onerror = (e) => reject(e)
+      img.src = url
+    })
 
+  const getRadianAngle = (degreeValue) => (degreeValue * Math.PI) / 180
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const image = await createImage(imageSrc)
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      const rotRad = getRadianAngle(rotation)
+
+      // calculate bounding box of the rotated image
+      const bBoxWidth = Math.abs(Math.cos(rotRad) * image.width) + Math.abs(Math.sin(rotRad) * image.height)
+      const bBoxHeight = Math.abs(Math.sin(rotRad) * image.width) + Math.abs(Math.cos(rotRad) * image.height)
+
+      canvas.width = crop.width
+      canvas.height = crop.height
+
+      ctx.save()
+      // move to center of canvas
+      ctx.translate(canvas.width / 2, canvas.height / 2)
+      ctx.rotate(rotRad)
+      ctx.translate(-image.width / 2, -image.height / 2)
+      ctx.drawImage(image, 0, 0)
+      ctx.restore()
+
+      // create final cropped image from canvas
+      const dataUrl = canvas.toDataURL('image/jpeg')
+      const blob = await (await fetch(dataUrl)).blob()
+      resolve({ blob, dataUrl })
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
 
 const ImageEditorWrapper = ({ imageSrc, onEditComplete, onCancel, className = '' }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 })

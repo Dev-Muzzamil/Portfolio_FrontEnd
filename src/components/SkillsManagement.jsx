@@ -4,7 +4,6 @@ import { Plus, Edit, Trash2, Search, RefreshCw, Eye, EyeOff, Link2 } from 'lucid
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
-import TechnologyIcon from './TechnologyIcon'
 
 const SkillsManagement = () => {
   const [skills, setSkills] = useState([])
@@ -50,11 +49,14 @@ const SkillsManagement = () => {
   const fetchSkills = async () => {
     try {
       setLoading(true)
+      console.log('🔍 Fetching skills from /skills/admin/all...')
       const response = await api.get('/skills/admin/all')
+      console.log('✅ Received response:', response.status, 'Skills count:', response.data.skills?.length)
+      console.log('📋 Skills:', response.data.skills?.slice(0, 3).map(s => s.name))
       setSkills(response.data.skills)
     } catch (error) {
-      console.error('Fetch skills error:', error)
-      toast.error('Failed to fetch skills')
+      console.error('❌ Fetch skills error:', error.response?.status, error.response?.data, error.message)
+      toast.error('Failed to fetch skills: ' + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }
@@ -98,7 +100,7 @@ const SkillsManagement = () => {
       // Get the references first
       const res = await api.get(`/skills/${skillId}/references`)
       const { references, usageStats } = res.data
-
+      
       // If there are active references, show modal with cascade option
       if (usageStats?.activeReferences > 0 || (references && (references.projects.length || references.certifications.length || references.education.length))) {
         setReferenceModal({ open: true, skill: skillId, references: references, allowCascade: true })
@@ -131,7 +133,7 @@ const SkillsManagement = () => {
 
   const confirmCascadeDelete = async (skillId) => {
     if (!window.confirm('⚠️ CASCADE DELETE: This will permanently delete the skill AND remove it from all projects, certifications, and education. Continue?')) return
-
+    
     try {
       await api.delete(`/skills/${skillId}?cascade=true`)
       toast.success('Skill deleted and removed from all references')
@@ -159,7 +161,7 @@ const SkillsManagement = () => {
     if (!window.confirm('Sync all skills from projects, certifications, and education? This will auto-create skills for any technologies/skills found.')) return
     try {
       setSyncing(true)
-
+      
       // First cleanup messy names
       try {
         const cleanupRes = await api.post('/skills/cleanup-names')
@@ -169,7 +171,7 @@ const SkillsManagement = () => {
       } catch (cleanupErr) {
         console.warn('Cleanup warning:', cleanupErr)
       }
-
+      
       // Then sync
       const response = await api.post('/skills/sync-all')
       const results = response.data.results
@@ -255,7 +257,7 @@ const SkillsManagement = () => {
   const actualCategories = [...new Set(skills.map(s => s.category || 'Uncategorized'))]
   // Merge predefined categories with actual categories from DB
   const allCategoriesForFilter = ['all', ...new Set([...categories, ...actualCategories])]
-
+  
   const filteredSkills = skills.filter(skill => {
     const matchesSearch = !searchTerm ||
       skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -266,6 +268,8 @@ const SkillsManagement = () => {
 
     return matchesSearch && matchesCategory && matchesActive
   })
+  
+  console.log('🔍 Filter state:', { selectedCategory, showInactive, totalSkills: skills.length, filteredCount: filteredSkills.length })
 
   const getProficiencyColor = (proficiency) => {
     switch (proficiency) {
@@ -278,10 +282,10 @@ const SkillsManagement = () => {
   }
 
   // Group by all categories (predefined + actual) - show all as drop zones
-  const allDisplayCategories = selectedCategory === 'all'
+  const allDisplayCategories = selectedCategory === 'all' 
     ? [...new Set([...categories, ...actualCategories])]
     : [selectedCategory]
-
+  
   const skillsByCategory = {}
   // Initialize all categories with empty arrays
   allDisplayCategories.forEach(cat => {
@@ -363,10 +367,11 @@ const SkillsManagement = () => {
           <button
             type="button"
             onClick={() => setShowInactive(prev => !prev)}
-            className={`inline-flex items-center px-3 py-2 rounded-md text-sm border transition-colors ${showInactive
+            className={`inline-flex items-center px-3 py-2 rounded-md text-sm border transition-colors ${
+              showInactive
                 ? 'bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:border-primary-700'
                 : 'bg-white text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
-              }`}
+            }`}
           >
             {showInactive ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
             {showInactive ? 'Show All' : 'Hide Inactive'}
@@ -392,20 +397,13 @@ const SkillsManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Name *
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="input-field pr-10"
-                    required
-                    placeholder="e.g. React, Python, AWS"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <TechnologyIcon technology={formData.name} className="w-5 h-5" />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Icon preview based on name</p>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="input-field"
+                  required
+                />
               </div>
 
               <div>
@@ -466,6 +464,8 @@ const SkillsManagement = () => {
                 rows="3"
               />
             </div>
+
+            {/* Inline actions removed; use sticky action bar to save/cancel */}
           </form>
         </motion.div>
       )}
@@ -481,10 +481,11 @@ const SkillsManagement = () => {
             Object.keys(skillsByCategory).map((category) => (
               <div
                 key={category}
-                className={`border border-dashed rounded-lg p-3 transition-colors ${draggedSkillId
-                    ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20 border-2'
+                className={`border border-dashed rounded-lg p-3 transition-colors ${
+                  draggedSkillId 
+                    ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20 border-2' 
                     : 'border-gray-200 dark:border-gray-700'
-                  }`}
+                }`}
                 onDragOver={handleDragOverCategory}
                 onDrop={(e) => handleDropOnCategory(e, category)}
               >
@@ -509,14 +510,14 @@ const SkillsManagement = () => {
                         draggable
                         onDragStart={(e) => handleDragStart(e, skill._id)}
                         onDragEnd={handleDragEnd}
-                        className={`flex items-center justify-between p-3 border rounded-lg transition-all ${draggedSkillId === skill._id
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-all ${
+                          draggedSkillId === skill._id
                             ? 'opacity-50 scale-95 border-primary-400 bg-primary-50 dark:bg-primary-900/20'
                             : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-700'
-                          } cursor-move`}
+                        } cursor-move`}
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <TechnologyIcon technology={skill.name} className="w-5 h-5" />
                             <h4 className="font-medium text-gray-900 dark:text-white">{skill.name}</h4>
                             {!skill.isActive && (
                               <span className="px-2 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 uppercase tracking-wide">Hidden</span>
@@ -623,7 +624,7 @@ const SkillsManagement = () => {
               {(!referenceModal.references || (referenceModal.references && (referenceModal.references.projects.length + referenceModal.references.certifications.length + referenceModal.references.education.length) === 0)) ? (
                 <button className="btn-primary" onClick={() => confirmDeleteFromModal(referenceModal.skill)}>Delete Skill</button>
               ) : referenceModal.allowCascade && (
-                <button
+                <button 
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                   onClick={() => confirmCascadeDelete(referenceModal.skill)}
                 >

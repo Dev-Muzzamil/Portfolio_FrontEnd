@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Search, RefreshCw, Calendar, MapPin, Award } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, RefreshCw, GraduationCap, Calendar, MapPin, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
@@ -234,7 +234,7 @@ const EducationManagement = () => {
     if (!institutionName) return null
     const byId = institutes.find(inst => inst._id === institutionName)
     if (byId) return byId
-    return institutes.find(inst =>
+    return institutes.find(inst => 
       (inst.name || '').toLowerCase().includes(String(institutionName).toLowerCase()) ||
       String(institutionName).toLowerCase().includes((inst.name || '').toLowerCase())
     )
@@ -315,30 +315,30 @@ const EducationManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Institution *
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    value={formData.institutionId || ''}
-                    onChange={(e) => {
-                      const id = e.target.value
-                      const inst = institutes.find(i => i._id === id)
-                      setFormData(prev => ({ ...prev, institutionId: id, institution: inst ? inst.name : prev.institution }))
-                    }}
-                    className="input-field"
-                  >
-                    <option value="">Select existing institute</option>
-                    {institutes.map(inst => (
-                      <option key={inst._id} value={inst._id}>{inst.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={formData.institution}
-                    onChange={(e) => setFormData({ ...formData, institution: e.target.value, institutionId: '' })}
-                    className="input-field"
-                    required
-                    placeholder="Or type institute name"
-                  />
-                </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={formData.institutionId || ''}
+                      onChange={(e) => {
+                        const id = e.target.value
+                        const inst = institutes.find(i => i._id === id)
+                        setFormData(prev => ({ ...prev, institutionId: id, institution: inst ? inst.name : prev.institution }))
+                      }}
+                      className="input-field"
+                    >
+                      <option value="">Select existing institute</option>
+                      {institutes.map(inst => (
+                        <option key={inst._id} value={inst._id}>{inst.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={formData.institution}
+                      onChange={(e) => setFormData({ ...formData, institution: e.target.value, institutionId: '' })}
+                      className="input-field"
+                      required
+                      placeholder="Or type institute name"
+                    />
+                  </div>
               </div>
 
               <div>
@@ -545,7 +545,7 @@ const EducationManagement = () => {
                 }
                 const aOrder = degreeOrder[a.degree] || 7
                 const bOrder = degreeOrder[b.degree] || 7
-
+                
                 if (aOrder !== bOrder) return aOrder - bOrder
                 return (a.order || 0) - (b.order || 0)
               })

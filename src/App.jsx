@@ -1,24 +1,11 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
-import NotFound from './pages/NotFound'
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
 import { ThemeProvider } from './context/ThemeContext'
-import SEO from './components/SEO'
-import CursorSystem from './components/CursorSystem'
-import HeroOrbs from './components/HeroOrbs'
-
-// Lazy load admin components to reduce initial bundle size
-const AdminLogin = lazy(() => import('./pages/AdminLogin'))
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
-
-// Loading fallback
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-paper dark:bg-paper-dark">
-    <div className="w-12 h-12 border-4 border-accent dark:border-accent-dark border-t-transparent rounded-full animate-spin"></div>
-  </div>
-)
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -36,10 +23,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <SEO />
-      <div className="min-h-screen bg-paper dark:bg-paper-dark text-ink dark:text-ink-dark relative transition-colors duration-300">
-        <CursorSystem />
-        <HeroOrbs />
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         {!isAdminRoute && (
           <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
         )}
@@ -49,16 +33,13 @@ function App() {
             <Route
               path="/admin"
               element={
-                <Suspense fallback={<PageLoader />}>
-                  {isAuthenticated ? (
-                    <AdminDashboard setIsAuthenticated={setIsAuthenticated} />
-                  ) : (
-                    <AdminLogin setIsAuthenticated={setIsAuthenticated} />
-                  )}
-                </Suspense>
+                isAuthenticated ? (
+                  <AdminDashboard setIsAuthenticated={setIsAuthenticated} />
+                ) : (
+                  <AdminLogin setIsAuthenticated={setIsAuthenticated} />
+                )
               }
             />
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         {!isAdminRoute && <Footer />}

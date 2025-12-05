@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Edit, X, Plus, Trash2, Upload, Camera } from 'lucide-react'
+import { Save, Edit, X, Plus, Trash2, Upload, Camera, Link, Award, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import ImageEditor from './ImageEditor'
@@ -33,7 +33,11 @@ const AboutManagement = () => {
   const [previewImage, setPreviewImage] = useState(null)
   const fileInputRef = useRef(null)
 
-  const fetchAboutData = useCallback(async () => {
+  useEffect(() => {
+    fetchAboutData()
+  }, [])
+
+  const fetchAboutData = async () => {
     try {
       const response = await api.get('/about')
       if (response.data.about) {
@@ -95,11 +99,7 @@ const AboutManagement = () => {
       console.error('Error fetching about data:', error)
       toast.error('Failed to load about data')
     }
-  }, [aboutData])
-
-  useEffect(() => {
-    fetchAboutData()
-  }, [fetchAboutData])
+  }
 
   const handleInputChange = (field, value) => {
     setAboutData(prev => ({
@@ -202,7 +202,7 @@ const AboutManagement = () => {
         const m = (copy.month || '').toString().padStart(2, '0')
         if (copy.precision === 'month-year' && y && m) {
           copy.date = `${y}-${m}-01` // ISO-like for compatibility
-          copy.dateLabel = `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(m, 10) - 1]} ${y}`
+          copy.dateLabel = `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m,10)-1]} ${y}`
         } else if (y) {
           copy.date = `${y}-01-01`
           copy.dateLabel = y
@@ -537,7 +537,7 @@ const AboutManagement = () => {
                           className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Leave blank if you don&apos;t want to show a date.</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Leave blank if you don't want to show a date.</p>
                     </div>
                   </div>
                   <div className="mt-4">

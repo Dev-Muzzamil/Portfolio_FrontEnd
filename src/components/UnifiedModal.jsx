@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Github, Calendar, Code, Award, FileText, Image, Play, ChevronDown, X, ArrowUpRight, Download, Link, FolderOpen } from 'lucide-react';
+import { ExternalLink, Github, Eye, Calendar, Code, Monitor, Award, FileText, Image, Play, Download, ChevronDown } from 'lucide-react';
 import { getApiBaseUrl } from '../utils/helpers';
 import TechnologyIcon from './TechnologyIcon';
 import { api } from '../services/api';
@@ -11,12 +11,20 @@ const UnifiedModal = ({
   mode,
   isOpen,
   onClose,
+  onEdit,
+  onDelete,
+  onToggleVisibility,
+  onLink,
   linkedItems = [],
   websitePreviews = {},
+  onLoadWebsitePreview,
   className = ''
 }) => {
+  if (!isOpen || !data) return null;
+
   const [freshProject, setFreshProject] = useState(null);
   const scrollRef = useRef(null);
+  const detailsRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,8 +41,7 @@ const UnifiedModal = ({
     return () => { cancelled = true };
   }, [isOpen, data?._id, type]);
 
-  if (!isOpen || !data) return null;
-
+  // Helper to format a label given stored precision/label/date
   const formatLabel = (label, isoDate, precision) => {
     if (label) return label
     if (!isoDate) return null
@@ -56,36 +63,143 @@ const UnifiedModal = ({
     return s || e
   })()
 
+  // duration label removed per request — we no longer show '2 mos' in the modal timeline
+
+  // Get image source based on type
   const getImageSource = () => {
     if (type === 'project') {
       const preview = websitePreviews[data._id];
+
       const shots = (freshProject && freshProject.screenshots) || data.screenshots;
-      if (shots && shots.length > 0) return { type: 'custom', url: shots[0], alt: data.title };
-      if (preview && preview.url) return { type: 'screenshot', url: preview.url, alt: data.title };
+      if (shots && shots.length > 0) {
+        return {
+          type: 'custom',
+          url: shots[0],
+          alt: data.title
+        };
+      }
+
+      if (preview && preview.url) {
+        return {
+          type: 'screenshot',
+          url: preview.url,
+          alt: `${data.title} website preview`
+        };
+      }
+
       if (data.liveUrl) {
         const apiBase = getApiBaseUrl();
+        // Use cached public screenshot endpoint (no per-open cache-busting)
         const screenshotUrl = `${apiBase}/api/v1/public/screenshot?url=${encodeURIComponent(data.liveUrl)}&projectId=${data._id}`;
-        return { type: 'screenshot', url: screenshotUrl, alt: data.title };
+        return {
+          type: 'screenshot',
+          url: screenshotUrl,
+          alt: `${data.title} website preview`
+        };
       }
-      return { type: 'fallback', url: null, alt: 'No preview' };
+
+      return {
+        type: 'fallback',
+        url: null,
+        alt: 'No preview available'
+      };
     } else if (type === 'certificate') {
-      if (data.certificateFile?.previewUrl || data.certificateFile?.originalUrl) return { type: 'image', url: data.certificateFile.previewUrl || data.certificateFile.originalUrl, alt: data.title };
-      if (data.certificateUrl) return { type: 'image', url: data.certificateUrl, alt: data.title };
-      return { type: 'fallback', url: null, alt: 'No preview' };
+      // Certificate logic: Check preview first, then file, then image, then fallback
+      
+      // Check for preview image from extraction
+      if (data.certificateFile?.previewUrl || data.certificateFile?.originalUrl || data.certificateFile?.url) {
+        return {
+          type: 'image',
+          url: data.certificateFile?.previewUrl || data.certificateFile?.originalUrl || data.certificateFile?.url,
+          alt: `${data.title} preview`
+        };
+      }
+
+      // Legacy: Check for primary certificate URL
+      if (data.certificateFile?.originalUrl || data.certificateUrl) {
+        return {
+          type: 'image',
+          url: data.certificateFile?.originalUrl || data.certificateUrl,
+          alt: `${data.title} certificate`
+        };
+      }
+
+      // Check files array
+      if (data.files && data.files.length > 0) {
+        const primaryFile = data.files.find(f => f.isPrimary) || data.files[0];
+
+        if (primaryFile.mimeType?.startsWith('image/')) {
+          return {
+            type: 'image',
+            url: primaryFile.url,
+            alt: primaryFile.originalName
+          };
+        } else if (primaryFile.mimeType?.includes('pdf')) {
+          return {
+            type: 'pdf',
+            url: primaryFile.thumbnailUrl || null,
+            alt: primaryFile.originalName,
+            file: primaryFile
+          };
+        }
+      }
+
+      // Check image field
+      if (data.image?.url) {
+        return {
+          type: 'image',
+          url: data.image.url,
+          alt: data.image.alt || data.title
+        };
+      }
+
+      return {
+        type: 'fallback',
+        url: null,
+        alt: 'No preview available'
+      };
     } else if (type === 'github') {
-      return { type: 'avatar', url: data.owner?.avatar_url || data.avatar_url, alt: data.name };
+      return {
+        type: 'avatar',
+        url: data.owner?.avatar_url || data.avatar_url,
+        alt: data.name || data.full_name
+      };
     }
-    return { type: 'fallback', url: null, alt: 'No preview' };
+
+    return { type: 'fallback', url: null, alt: 'No preview available' };
   };
 
+  // Get technologies/skills
   const getTechnologies = () => {
-    if (type === 'project') return data.technologies || [];
-    if (type === 'certificate') return (data.skills || []).map(s => typeof s === 'string' ? s : s?.name).filter(Boolean);
-    return data.language ? [data.language] : [];
+    if (type === 'project') {
+      return data.technologies || [];
+    } else if (type === 'certificate') {
+      const skills = data.skills || [];
+      // Convert skill objects to strings (skills can be either strings or {name, proficiency, verified, _id} objects)
+      return skills.map(skill => typeof skill === 'string' ? skill : (skill?.name || '')).filter(Boolean);
+    } else if (type === 'github') {
+      return data.language ? [data.language] : [];
+    }
+    return [];
+  };
+
+  // Get linked items
+  const getLinkedItems = () => {
+    if (type === 'project') {
+      return data.linkedCertificates?.map(certId =>
+        linkedItems.find(cert => cert._id === certId)
+      ).filter(Boolean) || [];
+    } else if (type === 'certificate') {
+      return data.linkedProjects?.map(projectId =>
+        linkedItems.find(project => project._id === projectId)
+      ).filter(Boolean) || [];
+    }
+    return [];
   };
 
   const imageSource = getImageSource();
   const technologies = getTechnologies();
+  const linkedItemsList = getLinkedItems();
 
   return (
     <AnimatePresence>
@@ -95,371 +209,403 @@ const UnifiedModal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 bg-ink/90 dark:bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative bg-white/80 dark:bg-surface-dark backdrop-blur-2xl dark:backdrop-blur-none rounded-2xl sm:rounded-3xl w-[95vw] max-w-6xl h-[90vh] shadow-2xl shadow-black/20 dark:shadow-black/40 border border-white/50 dark:border-white/[0.06] overflow-hidden flex flex-col ${className}`}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className={`relative bg-white dark:bg-gray-800 rounded-2xl w-[75vw] h-[90vh] shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col ${className}`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="absolute top-6 right-6 z-50 p-3 bg-paper dark:bg-surface-dark text-ink dark:text-ink-dark hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark transition-colors rounded-full shadow-lg border border-ink/5 dark:border-ink-dark/10"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="overflow-y-auto h-full" ref={scrollRef}>
-              {/* Image Section */}
-              <div className="relative h-[60vh] min-h-[400px] bg-gray/5 dark:bg-paper-dark">
-                {imageSource.url ? (
+            <div className="overflow-y-auto pb-28" ref={scrollRef} style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#d1d5db #f3f4f6'
+            }}>
+              {/* Image/Preview Section */}
+              <div className="relative h-[540px] overflow-hidden">
+                {imageSource.type === 'custom' || imageSource.type === 'image' || imageSource.type === 'avatar' ? (
                   <img
                     src={imageSource.url}
                     alt={imageSource.alt}
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                    style={{ aspectRatio: '16/9' }}
                   />
+                ) : imageSource.type === 'screenshot' ? (
+                  <img
+                    src={imageSource.url}
+                    alt={imageSource.alt}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                    style={{ aspectRatio: '16/9' }}
+                  />
+                ) : imageSource.type === 'pdf' ? (
+                    <div className="relative w-full h-full bg-gradient-to-br from-github-100 to-github-200 dark:from-github-900 dark:to-github-800 flex items-center justify-center overflow-hidden">
+                    {imageSource.url ? (
+                      <img
+                        src={imageSource.url}
+                        alt={`${imageSource.alt} thumbnail`}
+                        className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                        style={{ aspectRatio: '16/9' }}
+                      />
+                    ) : null}
+
+                    <div className={`w-full h-full flex items-center justify-center ${imageSource.url ? 'hidden' : ''}`}>
+                      <div className="text-center">
+                        <FileText className="w-24 h-24 text-github-600 dark:text-github-400 mx-auto mb-4" />
+                        <p className="text-lg text-github-700 dark:text-github-300 font-medium px-4">{imageSource.alt}</p>
+                        <p className="text-sm text-github-500 dark:text-github-400 mt-2">PDF Document</p>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-6xl opacity-20 grayscale">
-                      {type === 'project' ? '💻' : '🏆'}
-                    </span>
+                  <div className="w-full h-full bg-gradient-to-br from-github-100 to-github-200 dark:from-github-900 dark:to-github-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <span className="text-6xl mb-4 block">
+                        {type === 'project' ? '💻' : type === 'certificate' ? '🏆' : '📁'}
+                      </span>
+                      <p className="text-github-600 dark:text-github-400 font-medium">No Preview Available</p>
+                    </div>
                   </div>
                 )}
 
-                {/* Overlay Links - Show ALL GitHub and Live URLs */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-ink/90 to-transparent flex flex-wrap justify-center gap-4 pt-20">
-                  {/* Show all live URLs */}
-                  {type === 'project' && (data.liveUrls?.length > 0 ? data.liveUrls : (data.liveUrl ? [data.liveUrl] : [])).map((url, idx) => (
-                    <a
-                      key={`live-${idx}`}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-6 py-3 bg-paper dark:bg-paper-dark text-ink dark:text-ink-dark rounded-full hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark transition-all duration-300 text-xs font-bold uppercase tracking-widest shadow-lg hover:scale-105"
-                    >
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>{data.liveUrls?.length > 1 ? `Demo ${idx + 1}` : 'Live Demo'}</span>
-                    </a>
-                  ))}
-                  {/* Show all GitHub URLs */}
-                  {type === 'project' && (data.githubUrls?.length > 0 ? data.githubUrls : (data.githubUrl ? [data.githubUrl] : [])).map((url, idx) => (
-                    <a
-                      key={`github-${idx}`}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-6 py-3 bg-ink/50 backdrop-blur-md text-paper border border-paper/20 rounded-full hover:bg-ink transition-all duration-300 text-xs font-bold uppercase tracking-widest shadow-lg hover:scale-105"
-                    >
-                      <Github className="w-4 h-4" />
-                      <span>{(data.githubUrls?.length > 1 || (data.githubUrl && data.githubUrls?.length > 0)) ? `Repo ${idx + 1}` : 'GitHub'}</span>
-                    </a>
-                  ))}
+                {/* Overlay with Links */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center pb-8">
+                  <div className="flex flex-wrap gap-4">
+                    {/* Project Links (multiple) */}
+                    {type === 'project' && ((data.liveUrls && data.liveUrls.length) || data.liveUrl) && (
+                      (data.liveUrls && data.liveUrls.length ? data.liveUrls : [data.liveUrl]).map((url, idx) => (
+                        <a
+                          key={`modal-live-${idx}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>{`Live Demo ${idx + 1}`}</span>
+                        </a>
+                      ))
+                    )}
+                    {type === 'project' && ((data.githubUrls && data.githubUrls.length) || data.githubUrl) && (
+                      (data.githubUrls && data.githubUrls.length ? data.githubUrls : [data.githubUrl]).map((url, idx) => (
+                        <a
+                          key={`modal-gh-${idx}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                        >
+                          <Github className="w-4 h-4" />
+                          <span>{`GitHub ${idx + 1}`}</span>
+                        </a>
+                      ))
+                    )}
+
+                    {/* Certificate Links */}
+                    {type === 'certificate' && data.verificationUrl && (
+                      <a
+                        href={data.verificationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Verify Certificate</span>
+                      </a>
+                    )}
+                    {type === 'certificate' && imageSource.type === 'pdf' && imageSource.file && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (imageSource.file.url) window.open(imageSource.file.url, '_blank');
+                        }}
+                        className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        <Play className="w-4 h-4" />
+                        <span>View Certificate</span>
+                      </button>
+                    )}
+
+                    {type === 'certificate' && data.files && data.files.some(f => f.mimeType?.includes('pdf')) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const pdfFile = (data.files || []).find(f => f.mimeType?.includes('pdf'));
+                          if (pdfFile && pdfFile.url) window.open(pdfFile.url, '_blank');
+                        }}
+                        className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>View Original PDF</span>
+                      </button>
+                    )}
+
+                    {/* GitHub Repository Link */}
+                    {type === 'github' && data.html_url && (
+                      <a
+                        href={data.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 px-6 py-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-primary-600 hover:text-white transition-all duration-300 text-sm font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        <Github className="w-4 h-4" />
+                        <span>View Repository</span>
+                      </a>
+                    )}
+                  </div>
+
                 </div>
               </div>
 
-              {/* Content Section */}
-              <div className="p-12 max-w-4xl mx-auto space-y-12 pb-24">
-                {/* Header */}
-                <div className="text-center space-y-4">
-                  <h2 className="font-serif text-5xl md:text-6xl text-ink dark:text-ink-dark leading-tight">
-                    {data.title || data.name}
-                  </h2>
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {data.category && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
-                        {data.category}
+              {/* Details Section */}
+              <div ref={detailsRef} className="p-6 md:p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{data.title || data.name || data.full_name}</h2>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded capitalize text-xs font-medium">
+                        {type === 'project' ? data.category : type === 'certificate' ? data.issuingAuthority || data.issuer : data.owner?.login}
                       </span>
-                    )}
-                    {data.status && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest">
-                        {data.status}
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        type === 'project'
+                          ? data.status === 'completed'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                            : data.status === 'in-progress'
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                          : data.category === 'workshop'
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                            : data.category === 'course'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                            : data.category === 'certification'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {type === 'project' ? data.status?.replace('-', ' ') : type === 'certificate' ? data.category : data.language || 'Repository'}
                       </span>
-                    )}
-                    {dateRangeLabel && (
-                      <span className="px-4 py-1 bg-gray/10 dark:bg-surface-elevated text-ink/60 dark:text-ink-dark/60 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                        <Calendar className="w-3 h-3" />
-                        {dateRangeLabel}
-                      </span>
+                      {/* Date Range: moved below -- shown in dedicated Timeline row */}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timeline (moved from header): show start/end label only */}
+                {type === 'project' && dateRangeLabel && (
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs font-medium flex items-center space-x-2">
+                      <Calendar className="w-3 h-3" />
+                      <span>{dateRangeLabel}</span>
+                    </span>
+                    {/* Ongoing badge intentionally removed to avoid extra pill */}
+                  </div>
+                )}
+
+                {/* Description */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About This {type === 'project' ? 'Project' : type === 'certificate' ? 'Certificate' : 'Repository'}</h3>
+                  <div className="text-gray-700 dark:text-gray-300 text-[15px] leading-7">
+                    {type === 'project' ? (
+                      (() => {
+                        const raw = String((data.longDescription || data.description || '')).replace(/\r\n/g, '\n');
+                        if (!raw.trim()) return <p className="opacity-75">No description provided.</p>;
+                        const hasParagraphs = /\n{2,}/.test(raw);
+                        const paragraphs = hasParagraphs
+                          ? raw.split(/\n{2,}/).map(s => s.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean)
+                          : [raw.replace(/\s*\n\s*/g, ' ').trim()];
+                        return paragraphs.map((p, i) => (
+                          <p key={i} className="mb-4 last:mb-0">
+                            {p}
+                          </p>
+                        ));
+                      })()
+                    ) : type === 'certificate' ? (
+                      <p className="mb-0">{data.description}</p>
+                    ) : (
+                      <p className="mb-0">{data.description || data.bio}</p>
                     )}
                   </div>
                 </div>
 
-                {/* Description */}
-                <div className="font-serif text-xl text-ink/80 dark:text-ink-dark/80 leading-relaxed text-center">
-                  {data.description}
-                </div>
+                {/* Institution Information */}
+                {data.completedAtInstitution && (
+                    <div className="mb-6">
+                    <div className="bg-github-50 dark:bg-github-900/20 border border-github-200 dark:border-github-800 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-github-100 dark:bg-github-800 rounded-full flex items-center justify-center">
+                          <span className="text-github-600 dark:text-github-400 font-semibold text-sm">🏫</span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-github-900 dark:text-github-100">Completed at Institution</h4>
+                          <p className="text-sm text-github-700 dark:text-github-300">{data.completedAtInstitution}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                {/* Technologies */}
+                {/* Technologies/Skills */}
                 {technologies.length > 0 && (
-                  <div className="text-center">
-                    <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-accent dark:text-accent-dark mb-6">Technologies</h3>
-                    <div className="flex flex-wrap justify-center gap-3">
-                      {technologies.map((tech, i) => (
-                        <span key={i} className="px-4 py-2 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-full text-xs font-sans font-medium text-ink/70 dark:text-ink-dark/70 uppercase tracking-wider flex items-center gap-2">
-                          {type === 'project' && <TechnologyIcon technology={tech} className="w-4 h-4 grayscale opacity-50" />}
-                          {tech}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                      <Code className="w-5 h-5" />
+                      <span>{type === 'project' ? 'Technologies Used' : type === 'certificate' ? 'Skills & Technologies' : 'Primary Language'}</span>
+                    </h3>
+                    <div className="flex flex-wrap gap-1">
+                      {technologies.map((tech, techIndex) => (
+                        <span
+                          key={techIndex}
+                          className="px-2 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-md text-xs font-medium whitespace-nowrap inline-flex items-center space-x-1"
+                        >
+                          {type === 'project' && <TechnologyIcon technology={tech} className="w-3 h-3" />}
+                          <span>{tech}</span>
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Institution */}
-                {data.completedAtInstitution && (
-                  <div className="text-center border-t border-ink/10 dark:border-ink-dark/10 pt-8">
-                    <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-gray dark:text-gray-dark mb-2">Completed At</h3>
-                    <p className="font-serif text-2xl text-ink dark:text-ink-dark">{data.completedAtInstitution}</p>
-                  </div>
-                )}
-
-                {/* Links & Resources Section - Dedicated section for all URLs */}
-                {type === 'project' && (
-                  ((data.githubUrls?.length > 0 || data.githubUrl) || 
-                   (data.liveUrls?.length > 0 || data.liveUrl) ||
-                   (freshProject?.files || data.files)?.length > 0) && (
-                  <div className="border-t border-ink/10 dark:border-ink-dark/10 pt-8">
-                    <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-accent dark:text-accent-dark mb-6 text-center flex items-center justify-center gap-2">
-                      <Link className="w-4 h-4" />
-                      Links & Resources
+                {/* Linked Items */}
+                {linkedItemsList.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                      {type === 'project' ? <Award className="w-5 h-5" /> : <Code className="w-5 h-5" />}
+                      <span>Linked {type === 'project' ? 'Certificates' : 'Projects'}</span>
                     </h3>
-                    
-                    <div className="space-y-6">
-                      {/* Live URLs */}
-                      {(data.liveUrls?.length > 0 || data.liveUrl) && (
-                        <div>
-                          <h4 className="text-xs font-semibold text-ink/60 dark:text-ink-dark/60 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <ExternalLink className="w-3 h-3" />
-                            Live Demos
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {(data.liveUrls?.length > 0 ? data.liveUrls : (data.liveUrl ? [data.liveUrl] : [])).map((url, idx) => (
-                              <motion.a
-                                key={`live-link-${idx}`}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="flex items-center gap-3 p-3 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-lg hover:shadow-md dark:hover:shadow-medium-dark hover:border-accent/30 dark:hover:border-accent-dark/30 transition-all group"
-                              >
-                                <div className="p-2 bg-accent/10 dark:bg-accent-dark/10 rounded-lg group-hover:bg-accent dark:group-hover:bg-accent-dark transition-colors">
-                                  <ArrowUpRight className="w-4 h-4 text-accent dark:text-accent-dark group-hover:text-paper dark:group-hover:text-paper-dark" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-ink dark:text-ink-dark text-sm group-hover:text-accent dark:group-hover:text-accent-dark transition-colors">
-                                    {data.liveUrls?.length > 1 ? `Live Demo ${idx + 1}` : 'Live Demo'}
-                                  </p>
-                                  <p className="text-xs text-ink/50 dark:text-ink-dark/50 truncate">{url}</p>
-                                </div>
-                              </motion.a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* GitHub URLs */}
-                      {(data.githubUrls?.length > 0 || data.githubUrl) && (
-                        <div>
-                          <h4 className="text-xs font-semibold text-ink/60 dark:text-ink-dark/60 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <Github className="w-3 h-3" />
-                            Source Code
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {(data.githubUrls?.length > 0 ? data.githubUrls : (data.githubUrl ? [data.githubUrl] : [])).map((url, idx) => {
-                              // Extract repo name from URL
-                              const repoName = url.split('/').slice(-2).join('/').replace('.git', '');
-                              return (
-                                <motion.a
-                                  key={`github-link-${idx}`}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: idx * 0.05 }}
-                                  className="flex items-center gap-3 p-3 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-lg hover:shadow-md dark:hover:shadow-medium-dark hover:border-ink/30 dark:hover:border-ink-dark/30 transition-all group"
-                                >
-                                  <div className="p-2 bg-ink/10 dark:bg-ink-dark/10 rounded-lg group-hover:bg-ink dark:group-hover:bg-ink-dark transition-colors">
-                                    <Github className="w-4 h-4 text-ink dark:text-ink-dark group-hover:text-paper dark:group-hover:text-paper-dark" />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="font-medium text-ink dark:text-ink-dark text-sm group-hover:text-ink dark:group-hover:text-ink-dark transition-colors">
-                                      {(data.githubUrls?.length > 1 || (data.githubUrl && data.githubUrls?.length > 0)) ? `Repository ${idx + 1}` : 'Repository'}
-                                    </p>
-                                    <p className="text-xs text-ink/50 dark:text-ink-dark/50 truncate">{repoName}</p>
-                                  </div>
-                                </motion.a>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Project Files */}
-                      {(freshProject?.files || data.files)?.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-semibold text-ink/60 dark:text-ink-dark/60 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <FolderOpen className="w-3 h-3" />
-                            Project Files
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {((freshProject?.files || data.files) || []).map((file, idx) => (
-                              <motion.a
-                                key={file._id || idx}
-                                href={file.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="flex items-center gap-3 p-3 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-lg hover:shadow-md dark:hover:shadow-medium-dark hover:border-accent/30 dark:hover:border-accent-dark/30 transition-all group"
-                              >
-                                <FileText className="w-4 h-4 text-ink/50 dark:text-ink-dark/50 group-hover:text-accent dark:group-hover:text-accent-dark flex-shrink-0 transition-colors" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-ink dark:text-ink-dark text-xs truncate group-hover:text-accent dark:group-hover:text-accent-dark transition-colors">
-                                    {file.originalName}
-                                  </p>
-                                  {file.size && (
-                                    <p className="text-xs text-ink/40 dark:text-ink-dark/40">
-                                      {(file.size / 1024).toFixed(1)} KB
-                                    </p>
-                                  )}
-                                </div>
-                                <Download className="w-4 h-4 text-ink/30 dark:text-ink-dark/30 group-hover:text-accent dark:group-hover:text-accent-dark flex-shrink-0 transition-colors" />
-                              </motion.a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Reports Section */}
-                {type === 'project' && (freshProject?.reports || data.reports)?.length > 0 && (
-                  <div className="border-t border-ink/10 dark:border-ink-dark/10 pt-8">
-                    <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-accent dark:text-accent-dark mb-6 text-center flex items-center justify-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Reports & Documentation
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {((freshProject?.reports || data.reports) || [])
-                        .filter(report => report.visible !== false)
-                        .map((report, idx) => (
-                        <motion.div
-                          key={report._id || idx}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className="flex items-center justify-between p-4 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-lg hover:shadow-md dark:hover:shadow-medium-dark transition-all"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {linkedItemsList.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-200"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            {report.type === 'file' ? (
-                              <FileText className="w-5 h-5 text-accent dark:text-accent-dark flex-shrink-0" />
-                            ) : (
-                              <Link className="w-5 h-5 text-accent dark:text-accent-dark flex-shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium text-ink dark:text-ink-dark text-sm truncate">{report.title}</p>
-                              {report.description && (
-                                <p className="text-xs text-ink/50 dark:text-ink-dark/50 truncate">{report.description}</p>
-                              )}
+                          {type === 'project' ? <Award className="w-5 h-5 text-primary-600 dark:text-primary-400" /> : <Code className="w-5 h-5 text-primary-600 dark:text-primary-400" />}
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {type === 'project' ? item.issuingAuthority || item.issuer : item.category}
                             </div>
                           </div>
-                          {report.type === 'file' && report.file?.url && (
-                            <a
-                              href={report.file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-accent/10 dark:bg-accent-dark/10 text-accent dark:text-accent-dark hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark rounded-full transition-colors flex-shrink-0"
-                              title="Download"
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-                          )}
-                          {report.type === 'link' && report.link?.url && (
-                            <a
-                              href={report.link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-accent/10 dark:bg-accent-dark/10 text-accent dark:text-accent-dark hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark rounded-full transition-colors flex-shrink-0"
-                              title="Open link"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Certificate Reports Section */}
-                {type === 'certificate' && (data.reports)?.length > 0 && (
-                  <div className="border-t border-ink/10 dark:border-ink-dark/10 pt-8">
-                    <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-accent dark:text-accent-dark mb-6 text-center flex items-center justify-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Related Documents
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {(data.reports || [])
-                        .filter(report => report.visible !== false)
-                        .map((report, idx) => (
-                        <motion.div
-                          key={report._id || idx}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className="flex items-center justify-between p-4 bg-paper dark:bg-surface-dark border border-ink/10 dark:border-ink-dark/10 rounded-lg hover:shadow-md dark:hover:shadow-medium-dark transition-all"
+                {/* GitHub Stats */}
+                {type === 'github' && (
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Repository Stats</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{data.stargazers_count || 0}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Stars</div>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{data.forks_count || 0}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Forks</div>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{data.watchers_count || 0}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Watchers</div>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{data.open_issues_count || 0}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Issues</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Project Links */}
+                {type === 'project' && (((data.liveUrls && data.liveUrls.length) || data.liveUrl) || ((data.githubUrls && data.githubUrls.length) || data.githubUrl)) && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Project Links</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(data.liveUrls && data.liveUrls.length ? data.liveUrls : (data.liveUrl ? [data.liveUrl] : [])).map((url, idx) => (
+                        <a
+                          key={`details-live-${idx}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-200"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            {report.type === 'file' ? (
-                              <FileText className="w-5 h-5 text-accent dark:text-accent-dark flex-shrink-0" />
-                            ) : (
-                              <Link className="w-5 h-5 text-accent dark:text-accent-dark flex-shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium text-ink dark:text-ink-dark text-sm truncate">{report.title}</p>
-                              {report.description && (
-                                <p className="text-xs text-ink/50 dark:text-ink-dark/50 truncate">{report.description}</p>
-                              )}
+                          <ExternalLink className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{`Live Demo ${idx + 1}`}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{url}</div>
+                          </div>
+                        </a>
+                      ))}
+
+                      {(data.githubUrls && data.githubUrls.length ? data.githubUrls : (data.githubUrl ? [data.githubUrl] : [])).map((url, idx) => (
+                        <a
+                          key={`details-gh-${idx}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-200"
+                        >
+                          <Github className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{`GitHub Repository ${idx + 1}`}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{url}</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Certificate Files */}
+                {type === 'certificate' && data.files && data.files.length > 0 && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Certificate Files</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(() => {
+                        const files = data.files || [];
+                        const hasPdf = files.some(f => f.mimeType?.includes('pdf') || (data.certificateFile?.originalUrl && f.url === data.certificateFile?.originalUrl));
+                        const visibleFiles = files.filter(f => {
+                          // Hide preview image file when an original PDF exists
+                          if (hasPdf && data.certificateFile?.previewUrl && f.url === data.certificateFile.previewUrl) return false;
+                          return true;
+                        });
+                        return visibleFiles.map((file, fileIndex) => (
+                        <a
+                          key={file._id || fileIndex}
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors duration-200"
+                        >
+                          {file.mimeType?.startsWith('image/') ? (
+                            <Image className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{file.originalName}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {file.mimeType} • {((file.size || 0) / 1024).toFixed(1)} KB
                             </div>
                           </div>
-                          {report.type === 'file' && report.file?.url && (
-                            <a
-                              href={report.file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-accent/10 dark:bg-accent-dark/10 text-accent dark:text-accent-dark hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark rounded-full transition-colors flex-shrink-0"
-                              title="Download"
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-                          )}
-                          {report.type === 'link' && report.link?.url && (
-                            <a
-                              href={report.link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-accent/10 dark:bg-accent-dark/10 text-accent dark:text-accent-dark hover:bg-accent dark:hover:bg-accent-dark hover:text-paper dark:hover:text-paper-dark rounded-full transition-colors flex-shrink-0"
-                              title="Open link"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </motion.div>
-                      ))}
+                        </a>
+                        ));
+                      })()}
                     </div>
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Global Scroll Down Button (bottom-right of modal) */}
+            <button
+              onClick={(e) => { e.stopPropagation(); detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              className="absolute bottom-10 right-5 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors duration-200 bg-primary-600 text-white hover:bg-primary-500 ring-2 ring-white/80 dark:ring-black/40"
+              title="Scroll down"
+              aria-label="Scroll down"
+            >
+              <ChevronDown className="w-6 h-6" />
+            </button>
           </motion.div>
         </motion.div>
       )}

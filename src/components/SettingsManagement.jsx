@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Save, RefreshCw, Monitor, Palette } from 'lucide-react'
+import { Save, RefreshCw, Database, Shield, Mail, Cloud, Monitor, Bell, Palette } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authApi as api } from '../services/api'
 import StickyActionBar from './StickyActionBar'
@@ -21,6 +21,48 @@ const SettingsManagement = () => {
       secondaryColor: '#10B981',
       fontFamily: 'Inter',
       fontSize: '16px'
+    },
+    seo: {
+      ogTitle: 'Portfolio - Your Name',
+      ogDescription: 'Personal Portfolio Website',
+      ogImage: '',
+      twitterCard: 'summary_large_image',
+      robots: 'index, follow'
+    },
+    social: {
+      twitter: '',
+      linkedin: '',
+      github: '',
+      instagram: '',
+      youtube: '',
+      facebook: ''
+    },
+    contact: {
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      country: '',
+      zipCode: ''
+    },
+    notifications: {
+      emailNotifications: true,
+      contactFormNotifications: true,
+      projectUpdates: false,
+      systemAlerts: true
+    },
+    security: {
+      twoFactorAuth: false,
+      sessionTimeout: 30,
+      maxLoginAttempts: 5,
+      passwordExpiry: 90
+    },
+    backup: {
+      autoBackup: true,
+      backupFrequency: 'daily',
+      backupRetention: 30,
+      cloudBackup: false
     }
   })
   const [loading, setLoading] = useState(false)
@@ -28,7 +70,8 @@ const SettingsManagement = () => {
 
   const tabs = [
     { id: 'site', name: 'Site Settings', icon: Monitor },
-    { id: 'appearance', name: 'Appearance', icon: Palette }
+    { id: 'appearance', name: 'Appearance', icon: Palette },
+    { id: 'seo', name: 'SEO', icon: Database }
   ]
 
   useEffect(() => {
@@ -39,14 +82,9 @@ const SettingsManagement = () => {
     try {
       const res = await api.get('/settings')
       if (res.data && res.data.settings) {
-        // Merge with default settings to ensure all fields exist
-        setSettings(prev => ({
-          ...prev,
-          ...res.data.settings,
-          // Ensure nested objects are merged correctly if partial data comes back
-          site: { ...prev.site, ...res.data.settings.site },
-          appearance: { ...prev.appearance, ...res.data.settings.appearance }
-        }))
+        setSettings(prev => ({ ...prev, ...res.data.settings }))
+      } else if (res.data && res.data.settings === null) {
+        // No settings in DB, keep defaults
       }
     } catch (error) {
       console.error('Fetch settings error:', error)
@@ -61,7 +99,7 @@ const SettingsManagement = () => {
       if (res.data && res.data.settings) {
         // Update global site settings and apply title/favicon immediately
         window.__SITE_SETTINGS__ = res.data.settings
-        // Do not set document.title here — allow SEO (Helmet) to control page titles
+        if (res.data.settings.site?.title) document.title = res.data.settings.site.title
         if (res.data.settings.site?.faviconUrl) {
           const link = document.querySelector("link[rel*='icon']") || document.createElement('link')
           link.type = 'image/png'
@@ -69,7 +107,7 @@ const SettingsManagement = () => {
           link.href = res.data.settings.site.faviconUrl
           document.getElementsByTagName('head')[0].appendChild(link)
         }
-        try { window.dispatchEvent(new CustomEvent('site-settings-updated', { detail: res.data.settings })) } catch (e) { /* ignore */ }
+        try { window.dispatchEvent(new CustomEvent('site-settings-updated', { detail: res.data.settings })) } catch (e) {}
       }
       toast.success('Settings saved successfully')
     } catch (error) {
@@ -340,10 +378,212 @@ const SettingsManagement = () => {
     </div>
   )
 
+  const renderSEOSettings = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            OG Title
+          </label>
+          <input
+            type="text"
+            value={settings.seo.ogTitle}
+            onChange={(e) => handleInputChange('seo', 'ogTitle', e.target.value)}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Twitter Card
+          </label>
+          <select
+            value={settings.seo.twitterCard}
+            onChange={(e) => handleInputChange('seo', 'twitterCard', e.target.value)}
+            className="input-field"
+          >
+            <option value="summary">Summary</option>
+            <option value="summary_large_image">Summary Large Image</option>
+            <option value="app">App</option>
+            <option value="player">Player</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          OG Description
+        </label>
+        <textarea
+          value={settings.seo.ogDescription}
+          onChange={(e) => handleInputChange('seo', 'ogDescription', e.target.value)}
+          className="input-field"
+          rows="3"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          OG Image URL
+        </label>
+        <input
+          type="url"
+          value={settings.seo.ogImage}
+          onChange={(e) => handleInputChange('seo', 'ogImage', e.target.value)}
+          className="input-field"
+          placeholder="https://example.com/image.jpg"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Robots
+        </label>
+        <select
+          value={settings.seo.robots}
+          onChange={(e) => handleInputChange('seo', 'robots', e.target.value)}
+          className="input-field"
+        >
+          <option value="index, follow">Index, Follow</option>
+          <option value="index, nofollow">Index, No Follow</option>
+          <option value="noindex, follow">No Index, Follow</option>
+          <option value="noindex, nofollow">No Index, No Follow</option>
+        </select>
+      </div>
+    </div>
+  )
+
+  // Social & Contact settings are managed in separate sections, not here.
+
+  // Social & Contact settings are intentionally not included here.
+
+
+
+  const renderSecuritySettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Add an extra layer of security to your account</p>
+        </div>
+        <input
+          type="checkbox"
+          checked={settings.security.twoFactorAuth}
+          onChange={(e) => handleInputChange('security', 'twoFactorAuth', e.target.checked)}
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Session Timeout (minutes)
+          </label>
+          <input
+            type="number"
+            value={settings.security.sessionTimeout}
+            onChange={(e) => handleInputChange('security', 'sessionTimeout', parseInt(e.target.value))}
+            className="input-field"
+            min="5"
+            max="480"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Max Login Attempts
+          </label>
+          <input
+            type="number"
+            value={settings.security.maxLoginAttempts}
+            onChange={(e) => handleInputChange('security', 'maxLoginAttempts', parseInt(e.target.value))}
+            className="input-field"
+            min="3"
+            max="10"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Password Expiry (days)
+        </label>
+        <input
+          type="number"
+          value={settings.security.passwordExpiry}
+          onChange={(e) => handleInputChange('security', 'passwordExpiry', parseInt(e.target.value))}
+          className="input-field"
+          min="30"
+          max="365"
+        />
+      </div>
+    </div>
+  )
+
+  const renderBackupSettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white">Auto Backup</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Automatically backup your data</p>
+        </div>
+        <input
+          type="checkbox"
+          checked={settings.backup.autoBackup}
+          onChange={(e) => handleInputChange('backup', 'autoBackup', e.target.checked)}
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Backup Frequency
+          </label>
+          <select
+            value={settings.backup.backupFrequency}
+            onChange={(e) => handleInputChange('backup', 'backupFrequency', e.target.value)}
+            className="input-field"
+          >
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Backup Retention (days)
+          </label>
+          <input
+            type="number"
+            value={settings.backup.backupRetention}
+            onChange={(e) => handleInputChange('backup', 'backupRetention', parseInt(e.target.value))}
+            className="input-field"
+            min="7"
+            max="365"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white">Cloud Backup</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Store backups in the cloud</p>
+        </div>
+        <input
+          type="checkbox"
+          checked={settings.backup.cloudBackup}
+          onChange={(e) => handleInputChange('backup', 'cloudBackup', e.target.checked)}
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+        />
+      </div>
+    </div>
+  )
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'site': return renderSiteSettings()
       case 'appearance': return renderAppearanceSettings()
+      case 'seo': return renderSEOSettings()
       default: return renderSiteSettings()
     }
   }
@@ -389,10 +629,11 @@ const SettingsManagement = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors duration-200 ${activeTab === tab.id
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }`}
+                    className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
+                      activeTab === tab.id
+                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
                   >
                     <Icon className="w-5 h-5 mr-3" />
                     {tab.name}
