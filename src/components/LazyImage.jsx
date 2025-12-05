@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { optimizeCloudinaryImage, getBlurPlaceholder } from '../utils/imageOptimization';
+import { optimizeCloudinaryImage, getBlurPlaceholder, generateSrcSet } from '../utils/imageOptimization';
 
 const LazyImage = ({ 
   src, 
@@ -10,44 +10,58 @@ const LazyImage = ({
   width = 'auto', 
   height = 'auto',
   priority = false,
+  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   ...props 
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSrc, setCurrentSrc] = useState('');
 
   // Generate optimized URLs
+  // If width is specific (not auto), use it. Otherwise use 'auto' which might need client hints or just default.
+  // But crucially, we now generate a srcset.
   const optimizedSrc = optimizeCloudinaryImage(src, { width, quality: 'auto', format: 'auto' });
+  const srcSet = generateSrcSet(src);
   const placeholderSrc = getBlurPlaceholder(src);
+
+  // If priority is true, we bypass the lazy loading logic to ensure LCP optimization
+  if (priority) {
+    return (
+      <div className={`relative overflow-hidden ${className}`} style={{ width: width !== 'auto' ? width : undefined, height: height !== 'auto' ? height : undefined }}>
+        <img
+          src={optimizedSrc}
+          srcSet={srcSet}
+          sizes={sizes}
+          alt={alt}
+          className={`w-full h-full object-cover ${imgClassName}`}
+          loading="eager"
+          fetchPriority="high"
+          {...props}
+        />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!src) return;
 
-    // If priority is true, load the high-res image immediately
-    if (priority) {
-      const img = new Image();
-      img.src = optimizedSrc;
-      img.onload = () => {
-        setCurrentSrc(optimizedSrc);
-        setIsLoaded(true);
-      };
-    } else {
-      // Otherwise start with placeholder
-      setCurrentSrc(placeholderSrc);
-      
-      // And lazy load the high-res
-      const img = new Image();
-      img.src = optimizedSrc;
-      img.onload = () => {
-        setCurrentSrc(optimizedSrc);
-        setIsLoaded(true);
-      };
-    }
-  }, [src, optimizedSrc, placeholderSrc, priority]);
+    // Start with placeholder
+    setCurrentSrc(placeholderSrc);
+    
+    // And lazy load the high-res
+    const img = new Image();
+    img.src = optimizedSrc;
+    img.srcset = srcSet;
+    img.sizes = sizes;
+    img.onload = () => {
+      setCurrentSrc(optimizedSrc);
+      setIsLoaded(true);
+    };
+  }, [src, optimizedSrc, placeholderSrc, srcSet, sizes]);
 
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ width: width !== 'auto' ? width : undefined, height: height !== 'auto' ? height : undefined }}>
       {/* Placeholder (blurred) */}
-      {!isLoaded && !priority && src && (
+      {!isLoaded && src && (
         <img
           src={placeholderSrc}
           alt={alt}
@@ -58,6 +72,8 @@ const LazyImage = ({
       {/* Main Image */}
       <motion.img
         src={currentSrc || optimizedSrc}
+        srcSet={srcSet}
+        sizes={sizes}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${imgClassName}`}
         initial={{ opacity: 0 }}
