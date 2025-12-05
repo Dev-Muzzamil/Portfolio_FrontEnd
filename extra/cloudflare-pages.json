@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "buildOutputDirectory": "build",
+  "rootDirectory": "frontend",
+  "framework": "create-react-app",
+  "environmentVariables": {
+    "NODE_VERSION": "18"
+  }
+}

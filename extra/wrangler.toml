@@ -1,0 +1,10 @@
+name = "portfolio-frontend"
+compatibility_date = "2025-09-19"
+
+assets = { directory = "build" }
+
+
+name = "portfolio-backend"
+main = "index.js"  # or your actual entry file
+compatibility_date = "2025-09-19"
+workers_dev = true

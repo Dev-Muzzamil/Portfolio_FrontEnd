@@ -1,0 +1,8 @@
+# Handle client-side routing
+/*    /index.html   200
+
+# API redirects (if needed)
+/api/*    https://your-backend-api.com/api/:splat    200
+
+# Security headers
+/.well-known/*    https://your-backend-api.com/.well-known/:splat    200
