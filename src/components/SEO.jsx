@@ -43,11 +43,11 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
 
     // Use site title when available. If backend/settings are not reachable,
     // fall back to the page title (propTitle) so the page still shows a meaningful title.
-    const title = site?.title || propTitle || 'portfoliuo website'
+    const title = site?.title || propTitle || 'Syed Muzzamil Ali - Full Stack Developer & AI Engineer Portfolio'
 
     const description = propDescription || seo?.description || site?.description || 'Portfolio of Syed Muzzamil Ali - Full Stack Developer specializing in React, Node.js, MongoDB, AWS, and modern web technologies. Explore my projects, skills, and professional journey.'
 
-    const keywords = propKeywords || seo?.keywords || 'Syed Muzzamil Ali, Muzzaml Ali, Muzzamil, full stack developer, React developer, Node.js, MongoDB, AWS, portfolio, web developer'
+    const keywords = propKeywords || seo?.keywords || 'Syed Muzzamil Ali, Syed Muzammil Ali, Muzammil Ali, Muzzaml Ali, Muzzamil, Muzammil, full stack developer, React developer, Node.js, MongoDB, AWS, portfolio, web developer'
 
     const author = site?.author || 'Syed Muzzamil Ali'
     const image = propImage || seo?.ogImage || site?.logoUrl || 'https://syedmuzzamilali.me/og-image.jpg'
@@ -58,7 +58,7 @@ const SEO = ({ title: propTitle, description: propDescription, keywords: propKey
         "@context": "https://schema.org",
         "@type": "Person",
         "name": "Syed Muzzamil Ali",
-        "alternateName": ["Muzzaml Ali", "Muzzamil", "Syed Muzzamil"],
+        "alternateName": ["Syed Muzammil Ali", "Muzammil Ali", "Muzzaml Ali", "Muzzamil", "Muzammil", "Syed Muzzamil"],
         "url": "https://syedmuzzamilali.me",
         "sameAs": [
             "https://linkedin.com/in/syed-muzzamil-ali",

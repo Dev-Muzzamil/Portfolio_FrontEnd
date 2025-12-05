@@ -41,6 +41,21 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
+  // If user visits the site using the www subdomain, redirect to apex to keep
+  // a single canonical URL (helps backend/API origin and SEO consistency).
+  if (typeof window !== 'undefined') {
+    try {
+      const host = window.location.hostname || ''
+      // Only redirect if host starts with 'www.' and is our domain
+      if (/^www\./i.test(host) && host.endsWith('syedmuzzamilali.me')) {
+        const newHost = host.replace(/^www\./i, '')
+        const newUrl = `${window.location.protocol}//${newHost}${window.location.pathname}${window.location.search}${window.location.hash}`
+        // Use replace to avoid keeping the www URL in history
+        window.location.replace(newUrl)
+      }
+    } catch (e) { /* ignore */ }
+  }
+
   // Fetch site settings on startup and update document title/favicon
   ; (async function applySiteSettings() {
     try {

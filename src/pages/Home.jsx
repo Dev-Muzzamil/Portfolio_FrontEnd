@@ -4,6 +4,7 @@ import { api } from '../services/api'
 import { normalizeSocial } from '../utils/social'
 import ErrorBoundary from '../components/ErrorBoundary'
 import SEO from '../components/SEO'
+import LazySection from '../components/LazySection'
 
 // Lazy load components
 const Hero = lazy(() => import('../components/sections/Hero'))
@@ -123,81 +124,95 @@ const Home = () => {
 
             {/* About Section */}
             <section id="about">
-                <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-                    <ErrorBoundary>
-                        <About data={portfolioData.about} />
-                    </ErrorBoundary>
-                </Suspense>
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
+                        <ErrorBoundary>
+                            <About data={portfolioData.about} />
+                        </ErrorBoundary>
+                    </Suspense>
+                </LazySection>
             </section>
 
             {/* Experience & Education Section */}
             {(portfolioData.experience?.length > 0 || portfolioData.education?.length > 0) && (
                 <section id="experience-education" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden transition-colors duration-300">
-                    {/* Warm Gradient Background */}
-                    <div className="absolute inset-0 -z-10">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E6C2A3]/8 via-transparent to-transparent dark:from-[#D4A373]/5" />
-                    </div>
-                    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20">
-                            {/* Experience Column */}
-                            {portfolioData.experience?.length > 0 && (
-                                <div className={`${portfolioData.education?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
-                                    <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                                        <Experience data={portfolioData.experience} />
-                                    </Suspense>
-                                </div>
-                            )}
-
-                            {/* Education Column */}
-                            {portfolioData.education?.length > 0 && (
-                                <div className={`${portfolioData.experience?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
-                                    <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                                        <Education data={portfolioData.education} />
-                                    </Suspense>
-                                </div>
-                            )}
+                    <LazySection minHeight="80vh">
+                        {/* Warm Gradient Background */}
+                        <div className="absolute inset-0 -z-10">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E6C2A3]/8 via-transparent to-transparent dark:from-[#D4A373]/5" />
                         </div>
-                    </div>
+                        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20">
+                                {/* Experience Column */}
+                                {portfolioData.experience?.length > 0 && (
+                                    <div className={`${portfolioData.education?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
+                                        <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                                            <Experience data={portfolioData.experience} />
+                                        </Suspense>
+                                    </div>
+                                )}
+
+                                {/* Education Column */}
+                                {portfolioData.education?.length > 0 && (
+                                    <div className={`${portfolioData.experience?.length === 0 ? 'lg:col-span-2 max-w-4xl mx-auto w-full' : 'lg:col-span-1'}`}>
+                                        <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                                            <Education data={portfolioData.education} />
+                                        </Suspense>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </LazySection>
                 </section>
             )}
 
             {/* Projects Section (render only if projects exist) */}
             {portfolioData.projects && portfolioData.projects.length > 0 && (
                 <section id="projects">
-                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                        <Projects data={portfolioData.projects} skills={portfolioData.skills} />
-                    </Suspense>
+                    <LazySection minHeight="80vh">
+                        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                            <Projects data={portfolioData.projects} skills={portfolioData.skills} />
+                        </Suspense>
+                    </LazySection>
                 </section>
             )}
 
             {/* Skills Section */}
             <section id="skills">
-                <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                    <Skills data={portfolioData.skills} />
-                </Suspense>
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <Skills data={portfolioData.skills} />
+                    </Suspense>
+                </LazySection>
             </section>
 
             {/* GitHub Section */}
             <section id="github">
-                <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                    <GithubSection about={portfolioData.about} />
-                </Suspense>
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <GithubSection about={portfolioData.about} />
+                    </Suspense>
+                </LazySection>
             </section>
 
             {/* Certifications Section (render only if certifications exist) */}
             {portfolioData.certifications && portfolioData.certifications.length > 0 && (
                 <section id="certifications">
-                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                        <Certifications data={portfolioData.certifications} />
-                    </Suspense>
+                    <LazySection>
+                        <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                            <Certifications data={portfolioData.certifications} />
+                        </Suspense>
+                    </LazySection>
                 </section>
             )}
 
             {/* Contact Section */}
             <section id="contact">
-                <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
-                    <Contact data={portfolioData.about} />
-                </Suspense>
+                <LazySection>
+                    <Suspense fallback={<div className="py-16 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-ink dark:border-ink-dark"></div></div>}>
+                        <Contact data={portfolioData.about} />
+                    </Suspense>
+                </LazySection>
             </section>
         </div>
     )

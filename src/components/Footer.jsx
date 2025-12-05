@@ -20,6 +20,7 @@ const Footer = () => {
   const about = getCentralData();
   const social = normalizeSocial(about.socialLinks || about.social);
   const contactEmail = about.email;
+  const contactLocation = about.location || "Hyderabad, India";
 
   useEffect(() => {
     const onUpdate = (e) => setSiteSettings(window.__SITE_SETTINGS__ || e?.detail || {})
@@ -42,6 +43,9 @@ const Footer = () => {
               title="Triple-click for admin access"
             >
               © {currentYear} {siteSettings?.site?.author || 'Syed Muzzamil Ali'}. All rights reserved.
+            </p>
+            <p className="font-sans text-[10px] sm:text-xs text-gray/60 dark:text-gray-dark/60">
+              {contactLocation}
             </p>
           </div>
 
